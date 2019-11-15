@@ -14,9 +14,9 @@ Sample run:
       roslaunch pr2_gazebo pr2.launch
       roslaunch pr2_teleop teleop_keyboard.launch
       
-To launch PR2 in turtlebot house environment, use the following commands:
+To launch PR2 in the plaza environment, use the following commands:
       
-      roslaunch pr2_gazebo pr2_turtlebot3_house.launch
+      roslaunch pr2_gazebo pr2_plaza_world.launch
       roslaunch pr2_gazebo pr2.launch
       roslaunch pr2_teleop teleop_keyboard.launch
 
