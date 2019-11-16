@@ -16,8 +16,8 @@ Sample run:
       
 To launch PR2 in the plaza environment, use the following commands:
       
-      roslaunch pr2_gazebo pr2_plaza_world.launch
-      roslaunch pr2_gazebo pr2.launch
+      roslaunch cse571_project pr2_plaza_world.launch
+      roslaunch cse571_project pr2.launch
       roslaunch pr2_teleop teleop_keyboard.launch
 
 To Run the inclass API with pr2 copy the cse571_project folder to catkin_ws/src/ and run the demo as described in the api:
