@@ -1,361 +1,312 @@
-#!/usr/bin/env python
-
-import rospy
-from gazebo_msgs.msg import ModelState,ModelStates
-from std_msgs.msg import String
-from cse571_project.srv import *
+from collections import defaultdict
 import numpy as np
-import tf
-import math
-import copy
+import argparse
+import random
+import pprint
 import json
-from collections import namedtuple
-
-class RobotActionsServer:
-
-    def __init__(self, object_dict, root_path, random_seed=10):
-        self.object_dict = object_dict
-        self.failure = -1
-        self.success = 1
-        self.status = String(data='Idle')
-        self.model_state_publisher = rospy.Publisher("/gazebo/set_model_state",ModelState,queue_size = 10)
-        self.action_publisher = rospy.Publisher("/actions", String, queue_size=10)
-        self.status_publisher = rospy.Publisher("/status", String, queue_size=10)
-        self.random_seed = random_seed
-        self.current_state = self.generate_init_state()
-        self.action_config = self.load_action_config(root_path + '/action_config.json')
-        self.direction_list = ["NORTH","EAST","SOUTH","WEST"]
-        np.random.seed(self.random_seed)
-        rospy.Service("execute_action", ActionMsg,self.execute_action)
-        rospy.Service('get_all_actions', GetActions, self.get_all_actions)
-        rospy.Service('get_possible_actions', GetPossibleActions, self.get_possible_actions)
-        rospy.Service('get_possible_states', GetPossibleStates, self.get_possible_states)
-        rospy.Service('get_reward', GetReward, self.get_reward)
-        rospy.Service('is_terminal_state', IsTerminalState, self.is_terminal_state_handler)
-        rospy.Service('get_current_state', GetInitialState, self.get_current_state)
-        print "Action Server Initiated"
-
-
-    def generate_init_state(self):
-        state = {}
-        state['robot'] = {'x': 0.0, 'y': 0.0, 'orientation': 'EAST'}
-        for can in self.object_dict["cans"]:
-            state[can] = {
-                            'x': float(self.object_dict["cans"][can]["loc"][0]), 
-                            'y': float(self.object_dict["cans"][can]["loc"][1]), 
-                            'placed': False
-                        }
-        for cup in self.object_dict["cups"]:
-            state[cup] = {
-                            'x': float(self.object_dict["cups"][cup]["loc"][0]),
-                            'y': float(self.object_dict["cups"][cup]["loc"][1]),
-                        }
-	state["bin"]={'x': float(self.object_dict["bins"]["bin"]["loc"][0]),
-		      'y': float(self.object_dict["bins"]["bin"]["loc"][1]),}
-        return state
-
-
-    def get_current_state(self, req):
-        """
-        This function will return initial state of turtlebot3.
-        """
-        return json.dumps(self.current_state)
-
-
-    def load_action_config(self, action_config_file):
-        f = open(action_config_file)
-        action_config = json.load(f)
-        f.close()
-        return action_config
-
-
-    def get_turtlebot_location(self,state):
-        return state['robot']['x'], state['robot']['y'], state['robot']['orientation']
-
-
-    def change_gazebo_state(self, book_name, target_transform):
-        model_state_msg = ModelState()
-        model_state_msg.model_name = book_name
-        model_state_msg.pose.position.x = target_transform[0]
-        model_state_msg.pose.position.y = target_transform[1]
-        model_state_msg.pose.position.z = target_transform[2]
-        self.model_state_publisher.publish(model_state_msg)
-
-
-    def remove_edge(self, book_name):
-        rospy.wait_for_service('remove_blocked_edge')
-        try:
-            remove_edge = rospy.ServiceProxy('remove_blocked_edge',RemoveBlockedEdgeMsg)
-            _ = remove_edge(book_name)
-        except rospy.ServiceException,e:
-            print "Sevice call failed: %s"%e
-
-
-    def check_edge(self, x1, y1, x2, y2):
-        rospy.wait_for_service('check_is_edge')
-        try:
-            check_is_edge = rospy.ServiceProxy('check_is_edge',CheckEdge)
-            if x1 <= x2 and y1 <= y2:
-                result = check_is_edge(x1,y1,x2,y2)
-            else:
-                result = check_is_edge(x2,y2,x1,y1)
-            return result.value == 1
-        except rospy.ServiceException,e:
-            print "Sevice call failed: %s"%e
-
-
-    def is_terminal_state_handler(self, req):
-        state = json.loads(req.state)
-        return self.is_terminal_state(state)
-
-
-    def is_terminal_state(self, state):
-        # Terminal state is reached when all books are placed
-        cnt = 0
-        for key in state.keys():
-            if key.startswith('book'):
-                if state[key]['placed']:
-                    cnt += 1
-
-        if cnt == len(self.object_dict["books"].keys()):
-            return 1
-        else:
-            return 0
-
-
-    def get_all_actions(self, req):
-        return ','.join(self.action_config.keys())
-
-
-    def get_possible_actions(self, req):
-        state = req.state
-        
-        # These actions are executable anywhere in the environment
-        action_list = ['pick', 'place', 'TurnCW', 'TurnCCW']
-
-        # Check if we can execute moveF
-        success, next_state = self.execute_moveF(state)
-        if success == 1:
-            action_list.append('moveF')
-        return ','.join(action_list)
-
-
-    def get_possible_states(self, req):
-        state = json.loads(req.state)
-        action = req.action
-        action_params = json.loads(req.action_params)
-
-        next_states = {}
-        i = 1
-        for possible_action in self.action_config[action]['possibilities']:
-            
-            state_key = 'state_{}'.format(i)
-            i += 1
-
-            if possible_action == "noaction":
-                next_states[state_key] = (state, self.action_config[action]['possibilities'][possible_action])
-                continue
-            
-            # generate calling function
-            calling_params = []
-            for param in self.action_config[possible_action]['params']:
-                calling_params.append("'" + action_params[param] + "'")
-            calling_params.append("'" + json.dumps(state) + "'")
-            calling_function = "self.{}({})".format(self.action_config[possible_action]['function'], ','.join(calling_params))
-            success, next_state = eval(calling_function)
-
-            next_states[state_key] = (next_state, self.action_config[action]['possibilities'][possible_action])
-
-        return json.dumps(next_states)
-
-
-    def get_reward(self, req):
-        state = json.loads(req.state)
-        action = req.action
-        next_state = json.loads(req.next_state)
-
-        if state == next_state:
-            return self.action_config[action]['fail_reward']
-        else:
-            return self.action_config[action]['success_reward']
-    
-
-    def execute_action(self, req):
-        action = req.action_name
-        params = json.loads(req.action_params)
-
-        # No operations in terminal state
-        if self.is_terminal_state(self.current_state):
-            return -1, json.dumps(self.current_state)
-
-        # Choose an action based on probabilities in action config
-        chosen_action = np.random.choice(self.action_config[action]['possibilities'].keys(), 
-                                         p=self.action_config[action]['possibilities'].values())
-
-        if chosen_action == "noaction":
-            return self.failure, json.dumps(self.current_state)
-
-        # generate calling function
-        calling_params = []
-        for param in self.action_config[chosen_action]['params']:
-            calling_params.append("'" + params[param] + "'")
-        calling_params.append("'" + json.dumps(self.current_state) + "'")
-        calling_params.append('True')
-        calling_function = "self.{}({})".format(self.action_config[chosen_action]['function'], ','.join(calling_params))
-        success, next_state = eval(calling_function)
-        
-        # Update state
-        self.current_state = copy.deepcopy(next_state)
-        return success, json.dumps(next_state)
-
-
-    def execute_place(self, book_name, bin_name, current_state, simulation=False):
-        current_state = json.loads(current_state)
-        robot_state = self.get_turtlebot_location(current_state)
-        next_state = copy.deepcopy(current_state)
-        
-        # check if book is inside basket
-        if book_name != current_state['basket']:
-            self.status_publisher.publish(self.status)
-            return self.failure, current_state
-
-        # Validate book and bin
-        if book_name in self.object_dict["books"] and bin_name in self.object_dict["bins"]:
-            # Robot is at load location of bin
-            if (robot_state[0],robot_state[1]) in self.object_dict["bins"][bin_name]["load_loc"]:
-                # Book size and subject match bin
-                if self.object_dict["books"][book_name]["size"] == self.object_dict["bins"][bin_name]["size"] and \
-                    self.object_dict["books"][book_name]["subject"] == self.object_dict["bins"][bin_name]["subject"]:
-                    
-                    # Update gazebo environment if needed
-                    if simulation:
-                        goal_loc = list(self.object_dict["bins"][bin_name]["loc"])
-                        goal_loc[0] = goal_loc[0] + 0.5
-                        goal_loc[1] = goal_loc[1] + 0.5
-                        self.change_gazebo_state(book_name, goal_loc + [3])
-                        rospy.Rate(1).sleep()
-                        
-                    self.status_publisher.publish(self.status)
-
-                    # Update state
-                    next_state[book_name]['x'] = -1
-                    next_state[book_name]['y'] = -1
-                    next_state[book_name]['placed'] = True
-                    next_state['basket'] = None
-                    
-                    return self.success, next_state
-        
-        self.status_publisher.publish(self.status)
-        return self.failure, next_state
-
-
-    def execute_pick(self, book_name, current_state, simulation=False):
-        current_state = json.loads(current_state)
-        robot_state = self.get_turtlebot_location(current_state)
-        next_state = copy.deepcopy(current_state)
-
-        # Valid book and book isn't already placed
-        if book_name in self.object_dict["books"] and not current_state[book_name]['placed']:
-            # Robot is at the load location for the book
-            if (robot_state[0],robot_state[1]) in self.object_dict["books"][book_name]["load_loc"]:
-                # Basket is empty
-                if current_state['basket'] is None:
-                    
-                    # Update gazebo environment if needed
-                    if simulation:
-                        self.change_gazebo_state(book_name, list(robot_state[:2])+[2])
-                        rospy.Rate(1).sleep()
-
-                    # Clear the blocked edge in the environment
-                    _ = self.remove_edge(book_name)
-                    self.status_publisher.publish(self.status)
-
-                    # Update state
-                    next_state['basket'] = book_name
-                    next_state[book_name]['x'] = -1
-                    next_state[book_name]['y'] = -1
-
-                    return self.success, next_state
-
-        self.status_publisher.publish(self.status)
-        return self.failure, next_state
-
-
-    def execute_moveF(self, current_state, simulation=False):
-        current_state = json.loads(current_state)
-        robot_state = self.get_turtlebot_location(current_state)
-        next_state = copy.deepcopy(current_state)
-        x1 = robot_state[0]
-        y1 = robot_state[1]
-
-        # Get new location
-        if "EAST" in robot_state[2]:
-            x2 = x1 + 0.5
-            y2 = y1
-        elif "WEST" in robot_state[2]:
-            x2 = x1 - 0.5
-            y2 = y1
-        elif "NORTH" in robot_state[2]:
-            x2 = x1
-            y2 = y1 + 0.5
-        else:
-            x2 = x1
-            y2 = y1 - 0.5
-
-        # Check if that edge isn't blocked
-        if self.check_edge(x1,y1,x2,y2):
-            action_str = "MoveF"
-
-            # Make bot move if simulating in gazebo
-            if simulation:
-                self.action_publisher.publish(String(data=action_str))
-                rospy.wait_for_message("/status",String)
-            
-            # Update State
-            next_state['robot']['x'] = x2
-            next_state['robot']['y'] = y2
-
-            return self.success, next_state
-        else:
-            return self.failure, next_state
-
-
-    def execute_TurnCW(self, current_state, simulation=False):
-        current_state = json.loads(current_state)
-        next_state = copy.deepcopy(current_state)
-
-        # Make bot move if simulating in gazebo
-        if simulation:
-            action_str = "TurnCW"
-            self.action_publisher.publish(String(data=action_str))
-            rospy.wait_for_message("/status",String)
-
-        # Update state
-        current_orientation = current_state['robot']['orientation']
-        new_orientation = self.direction_list[(self.direction_list.index(current_orientation) + 1)%4]
-        next_state['robot']['orientation'] = new_orientation
-
-        return self.success, next_state
-
-
-    def execute_TurnCCW(self, current_state, simulation=False):
-        current_state = json.loads(current_state)
-        next_state = copy.deepcopy(current_state)
-        
-        # Make bot move if simulating in gazebo
-        if simulation:
-            action_str = "TurnCCW"
-            self.action_publisher.publish(String(data=action_str))
-            rospy.wait_for_message("/status",String)
-        
-        # Update state
-        current_orientation = current_state['robot']['orientation']
-        new_orientation = self.direction_list[(self.direction_list.index(current_orientation) - 1)%4]
-        next_state['robot']['orientation'] = new_orientation
-
-        return self.success, next_state
-
-
-if __name__ == "__main__":
-    object_dict = None
-    RobotActionsServer(object_dict)
+import copy
+import math
+
+class Maze:
+
+	def __init__(self, grid_dimension, myscale=0.5):
+		self.walls_list=[]
+		self.boundary_list=[]
+		self.coke_list=[]
+		self.cup_list=[]
+		self.bin_list=[]
+		self.bin_loc=[]
+		self.grid_dimension = grid_dimension
+		self.grid_start = 0
+		self.myscale = myscale
+		self.blocked_edges = set()
+
+	def __deepcopy__(self, memodict={}):
+		new_maze = Maze(self.grid_dimension)
+		new_maze.blocked_edges = copy.deepcopy(self.blocked_edges)
+		return new_maze
+
+	def copy_empty_world(self,root_path):
+		f_in = open(root_path+'/worlds/empty_world.sdf', 'r')
+		f_out = open(root_path+'/worlds/maze.sdf', 'w')
+		for line in f_in:
+			f_out.write(line)
+		f_in.close()
+		return f_out
+
+	def add_walls_description(self,f_out):
+		for i in range(4):
+			f_out.write("<link name='Wall_{}'>\n<pose frame=''>{} {} {} {} {} {}</pose>\n<velocity>0 0 0 0 -0 0</velocity>\n<acceleration>0 0 0 0 -0 0</acceleration>\n       <wrench>0 0 0 0 -0 0</wrench>\n</link>".format(i,self.boundary_list[i][0],self.boundary_list[i][1],self.boundary_list[i][2],self.boundary_list[i][3],self.boundary_list[i][4],self.boundary_list[i][5]))
+		j=i+1
+		for i in range(len(self.walls_list)):
+			f_out.write(" <link name='Wall_{}'>\n<pose frame=''>{} {} {} {} {} {}</pose>\n<velocity>0 0 0 0 -0 0</velocity>\n<acceleration>0 0 0 0 -0 0</acceleration>\n       <wrench>0 0 0 0 -0 0</wrench>\n</link>".format(i+j,self.walls_list[i][0],self.walls_list[i][1],self.walls_list[i][2],self.walls_list[i][3],self.walls_list[i][4],self.walls_list[i][5]))
+
+		f_out.write("<model name='pr2_bin'>\n        <pose frame=''>{} {} {} {} {} {}</pose>\n        <scale>0.3 0.3 0.4</scale>\n        <link name='link'>\n          <pose frame=''>{} {} {} {} {} {}</pose>\n          <velocity>0 0 0 0 -0 0</velocity>\n          <acceleration>0 0 0 0 -0 0</acceleration>\n          <wrench>0 0 0 0 -0 0</wrench>\n        </link>\n      </model>".format(self.bin_list[0][0],self.bin_list[0][1],self.bin_list[0][2],self.bin_list[0][3],self.bin_list[0][4],self.bin_list[0][5],self.bin_list[0][0],self.bin_list[0][1],self.bin_list[0][2],self.bin_list[0][3],self.bin_list[0][4],self.bin_list[0][5]))
+		f_out.write("</model>\n<light name='sun'>\n<pose frame=''>0 0 10 0 -0 0</pose>\n</light>\n</state>\n</world>\n</sdf>")
+	def add_walls(self,f_out, length):
+		for i in range(4):
+			f_out.write("\n<link name='Wall_{}'>\n<collision name='Wall_{}_Collision'>\n<geometry>\n<box>\n<size>{} 0.15 0.5</size>\n</box>\n</geometry>\n<pose frame=''>0 0 0.25 0 -0 0</pose>\n<max_contacts>10</max_contacts>\n<surface>\n<contact>\n<ode/>\n</contact>\n<bounce/>\n<friction>\n<torsional>\n<ode/>\n</torsional>\n<ode/>\n</friction>\n</surface>\n</collision>\n<visual name='Wall_{}_Visual'>\n<pose frame=''>0 0 0.25 0 -0 0</pose>\n<geometry>\n<box>\n<size>{} 0.15 0.5</size>\n</box>\n</geometry>\n<material>\n<script>\n<uri>file://media/materials/scripts/gazebo.material</uri>\n<name>Gazebo/Wood</name>\n</script>\n<ambient>1 1 1 1</ambient>\n</material>\n</visual>\n<pose frame=''>{} {} {} {} {} {}</pose>\n<self_collide>0</self_collide>\n<kinematic>0</kinematic>\n<gravity>1</gravity>\n</link>\n".format(i,i,length*2,i,length*2,self.boundary_list[i][0],self.boundary_list[i][1],self.boundary_list[i][2],self.boundary_list[i][3],self.boundary_list[i][4],self.boundary_list[i][5]))
+			#f_out.write(string_write)
+		j=i+1
+		for i in range(len(self.walls_list)):
+			f_out.write("\n<link name='Wall_{}'>\n<collision name='Wall_{}_Collision'>\n<geometry>\n<box>\n<size>{} 0.15 0.5</size>\n</box>\n</geometry>\n<pose frame=''>0 0 0.25 0 -0 0</pose>\n<max_contacts>10</max_contacts>\n<surface>\n<contact>\n<ode/>\n</contact>\n<bounce/>\n<friction>\n<torsional>\n<ode/>\n</torsional>\n<ode/>\n</friction>\n</surface>\n</collision>\n<visual name='Wall_{}_Visual'>\n<pose frame=''>0 0 0.25 0 -0 0</pose>\n<geometry>\n<box>\n<size>{} 0.15 0.5</size>\n</box>\n</geometry>\n<material>\n<script>\n<uri>file://media/materials/scripts/gazebo.material</uri>\n<name>Gazebo/Wood</name>\n</script>\n<ambient>1 1 1 1</ambient>\n</material>\n</visual>\n<pose frame=''>{} {} {} {} {} {}</pose>\n<self_collide>0</self_collide>\n<kinematic>0</kinematic>\n<gravity>1</gravity>\n</link>\n".format(i+j,i+j,length*2*0.3,i+j,length*2*0.3,self.walls_list[i][0],self.walls_list[i][1],self.walls_list[i][2],self.walls_list[i][3],self.walls_list[i][4],self.walls_list[i][5]))
+			#f_out.write(string_write)
+		f_out.write("<static>1</static>\n</model>\n")
+		#f_out.write(string_write)
+		self.add_cans(f_out)
+	def add_cans_description(self,f_out):
+		for i in range(len(self.coke_list)):
+			f_out.write("<model name='coke_can{}'>\n        <pose frame=''>{} {} {} {} {} {}</pose>\n        <scale>1 1 1</scale>\n        <link name='link'>\n          <pose frame=''>{} {} {} {} {} {}</pose>\n          <velocity>-7.4e-05 0.000547 0.002754 0.209596 0.022304 0.003201</velocity>\n          <acceleration>-0.096311 -0.13049 3.57572 -2.45192 0.965952 -2.20851</acceleration>\n          <wrench>-0.037561 -0.050891 1.39453 0 -0 0</wrench>\n        </link>\n      </model>".format(i,self.coke_list[i][0],self.coke_list[i][1],self.coke_list[i][2],self.coke_list[i][3],self.coke_list[i][4],self.coke_list[i][5],self.coke_list[i][0],self.coke_list[i][1],self.coke_list[i][2],self.coke_list[i][3],self.coke_list[i][4],self.coke_list[i][5]))
+		
+
+		f_out.write("<model name='ground_plane'>\n        <pose frame=''>0 0 0 0 -0 0</pose>\n        <scale>1 1 1</scale>\n        <link name='link'>\n          <pose frame=''>0 0 0 0 -0 0</pose>\n          <velocity>0 0 0 0 -0 0</velocity>\n          <acceleration>0 0 0 0 -0 0</acceleration>\n          <wrench>0 0 0 0 -0 0</wrench>\n        </link>\n      </model>\n")
+		
+
+		self.add_cups_description(f_out)
+	#change in dimenssion of the book is handled in this function.
+
+
+
+
+	def add_cans(self,f_out):
+		for i in range(len(self.coke_list)):
+			f_out.write("<model name='coke_can{}'>\n	<link name='link'>\n        <inertial>\n          <mass>0.60</mass>\n          <inertia>\n            <ixx>0.00055575</ixx>\n            <ixy>0</ixy>\n            <ixz>0</ixz>\n            <iyy>0.00055575</iyy>\n            <iyz>0</iyz>\n            <izz>0.0001755</izz>\n          </inertia>\n        </inertial>\n        <collision name='collision'>\n          <pose frame=''>0.003937 0.004724 -0.18 0 -0 0</pose>\n          <geometry>\n            <mesh>\n              <uri>model://coke_can/meshes/coke_can.dae</uri>\n              <scale>1 1 1</scale>\n            </mesh>\n          </geometry>\n          <max_contacts>10</max_contacts>\n          <surface>\n            <contact>\n              <ode/>\n            </contact>\n            <bounce/>\n            <friction>\n              <torsional>\n                <ode/>\n              </torsional>\n              <ode/>\n            </friction>\n          </surface>\n        </collision>\n        <visual name='visual'>\n          <pose frame=''>0.003937 0.004724 -0.18 0 -0 0</pose>\n          <geometry>\n            <mesh>\n              <uri>model://coke_can/meshes/coke_can.dae</uri>\n              <scale>2 2 1</scale>\n            </mesh>\n          </geometry>\n        </visual>\n        <self_collide>0</self_collide>\n        <kinematic>0</kinematic>\n        <gravity>1</gravity>\n      </link>\n      <pose frame=''>{} {} {} {} {} {}</pose>\n    </model>".format(i,self.coke_list[i][0],self.coke_list[i][1],self.coke_list[i][2],self.coke_list[i][3],self.coke_list[i][4],self.coke_list[i][5]))
+		self.add_cups(f_out)
+		f_out.write("<state world_name='default'>\n<sim_time>258 883000000</sim_time>\n<real_time>246 336670878</real_time>\n<wall_time>1573523046 957349641</wall_time>\n<iterations>123860</iterations>\n<model name='ground_plane'>\n<pose frame=''>0 0 0 0 -0 0</pose>\n<scale>1 1 1</scale>\n<link name='link'>\n<pose frame=''>0 0 0 0 -0 0</pose>\n<velocity>0 0 0 0 -0 0</velocity>\n<acceleration>0 0 0 0 -0 0</acceleration>\n<wrench>0 0 0 0 -0 0</wrench>\n</link>\n</model>\n<model name='turtlebot3_plaza'>\n<pose frame=''>0.34992 -0.526986 0 0 -0 0</pose>\n    <scale>1 1 1</scale>\n")
+	
+	def add_cups_description(self,f_out):
+		 for i in range(len(self.cup_list)):
+			f_out.write("<model name='plastic_cup{}'>\n        <pose frame=''>{} {} {} {} {} {}</pose>\n        <scale>1 1 1</scale>\n        <link name='link'>\n          <pose frame=''>{} {} {} {} {} {}</pose>\n          <velocity>0 0 0 0 -0 0</velocity>\n          <acceleration>0 0 0 0 -0 0</acceleration>\n          <wrench>0 0 0 0 -0 0</wrench>\n        </link>\n      </model>".format(i,self.cup_list[i][0],self.cup_list[i][1],self.cup_list[i][2],self.cup_list[i][3],self.cup_list[i][4],self.cup_list[i][5],self.cup_list[i][0],self.cup_list[i][1],self.cup_list[i][2],self.cup_list[i][3],self.cup_list[i][4],self.cup_list[i][5]))
+
+	def add_cups(self,f_out):
+		for i in range(len(self.cup_list)):
+			f_out.write("<model name='plastic_cup{}'>\n      <link name='link'>\n        <pose frame=''>0 0 0.065 0 -0 0</pose>\n        <inertial>\n          <mass>0.0599</mass>\n          <inertia>\n            <ixx>0.000302896</ixx>\n            <ixy>0</ixy>\n            <ixz>0</ixz>\n            <iyy>0.000302896</iyy>\n            <iyz>0</iyz>\n            <izz>3.28764e-05</izz>\n          </inertia>\n        </inertial>\n        <collision name='collision'>\n          <geometry>\n            <mesh>\n              <uri>model://plastic_cup/meshes/plastic_cup.dae</uri>\n              <scale>1 1 1</scale>\n            </mesh>\n          </geometry>\n          <surface>\n            <contact>\n              <poissons_ratio>0.35</poissons_ratio>\n              <elastic_modulus>3.10264e+09</elastic_modulus>\n              <ode>\n                <kp>100000</kp>\n                <kd>100</kd>\n                <max_vel>100</max_vel>\n                <min_depth>0.001</min_depth>\n              </ode>\n            </contact>\n            <friction>\n              <torsional>\n                <coefficient>1</coefficient>\n                <use_patch_radius>0</use_patch_radius>\n                <surface_radius>0.01</surface_radius>\n                <ode/>\n              </torsional>\n              <ode/>\n            </friction>\n            <bounce/>\n          </surface>\n          <max_contacts>10</max_contacts>\n        </collision>\n        <visual name='visual'>\n          <geometry>\n            <mesh>\n              <uri>model://plastic_cup/meshes/plastic_cup.dae</uri>\n              <scale>1 1 1</scale>\n            </mesh>\n          </geometry>\n          <material>\n            <script>\n              <uri>file://media/materials/scripts/gazebo.material</uri>\n              <name>Gazebo/GreyTransparent</name>\n            </script>\n          </material>\n        </visual>\n        <self_collide>0</self_collide>\n        <kinematic>0</kinematic>\n        <gravity>1</gravity>\n      </link>\n      <pose frame=''>{} {} {} {} {} {}</pose>\n    </model>".format(i,self.cup_list[i][0],self.cup_list[i][1],self.cup_list[i][2],self.cup_list[i][3],self.cup_list[i][4],self.cup_list[i][5]))
+
+		f_out.write("<model name='pr2_bin'>\n      <link name='link'>\n        <pose frame=''>0 0 0 0 -0 0</pose>\n        <self_collide>0</self_collide>\n        <kinematic>0</kinematic>\n        <gravity>1</gravity>\n        <inertial>\n          <mass>1</mass>\n          <pose frame=''>0 0 0 0 -0 0</pose>\n          <inertia>\n            <ixx>1</ixx>\n            <ixy>0</ixy>\n            <ixz>0</ixz>\n            <iyy>1</iyy>\n            <iyz>0</iyz>\n            <izz>1</izz>\n          </inertia>\n        </inertial>\n        <visual name='visual'>\n          <geometry>\n            <mesh>\n              <uri>model://bookcart/meshes/bookcart.dae</uri>\n              <scale>{} {} 1</scale>\n            </mesh>\n          </geometry>\n          <pose frame=''>0 0 0 0 -0 0</pose>\n          <cast_shadows>1</cast_shadows>\n          <transparency>0</transparency>\n          <material>\n            <shader type='vertex'>\n              <normal_map>__default__</normal_map>\n            </shader>\n          </material>\n        </visual>\n      </link>\n      <static>1</static>\n      <allow_auto_disable>1</allow_auto_disable>\n      <pose frame=''>{} {} {} {} {} {}</pose>\n    </model>".format(self.grid_dimension*self.myscale*0.1,self.grid_dimension*self.myscale*0.1,self.bin_list[0][0],self.bin_list[0][1],self.bin_list[0][2],self.bin_list[0][3],self.bin_list[0][4],self.bin_list[0][5]))
+		return
+
+
+	def can_dict_generator(self,cans,counter,location, coord1, cord2):
+		cans["can_"+str(counter)]["loc"]= location
+		cans["can_"+str(counter)]["load_loc"] = []
+		cans["can_"+str(counter)]["load_loc"].append(coord1)
+		cans["can_"+str(counter)]["load_loc"].append(cord2)
+	def cup_dict_generator(self,cups, counter, location, coord1, cord2):
+		cups["cup_"+str(counter)]["loc"]= location
+		cups["cup_"+str(counter)]["load_loc"] = []
+		cups["cup_"+str(counter)]["load_loc"].append(coord1)
+		cups["cup_"+str(counter)]["load_loc"].append(cord2)
+
+	def bin_dict_generator(self,bins, access_loc_list, location):
+		bins["bin"]["loc"]= location
+		bins["bin"]["load_loc"] = access_loc_list
+
+	def generate_blocked_edges(self, list_of_number_of_cans, list_of_number_of_cups,seed, root_path):
+		object_dict = {}
+		cans = {}
+		cups={}
+		bins={}
+		can_loadloc=[]
+		cup_loadloc=[]
+		np.random.seed(seed)
+		f_out = self.copy_empty_world(root_path)
+		dimension=self.grid_dimension*self.myscale
+		self.boundary_list.append((-dimension,0,0,0,-0,1.5708))
+		self.boundary_list.append((0,dimension-0.08,0,0,-0,0))
+		self.boundary_list.append((dimension,0,0,0,-0,1.5708))
+		self.boundary_list.append((0,-dimension+0.08,0,0,-0,3.14159))
+		limit=int(math.ceil(dimension*2))
+		for i in range(limit):
+			self.blocked_edges.add((-dimension,0+i*self.myscale,-dimension,0.5+i*self.myscale))
+			self.blocked_edges.add((-dimension,0-i*self.myscale,-dimension,-0.5-i*self.myscale))
+			self.blocked_edges.add((-dimension+0.5,0.5+i*self.myscale,-dimension,0.5+i*self.myscale))
+			self.blocked_edges.add((-dimension+0.5,-0.5-i*self.myscale,-dimension,-0.5-i*self.myscale))
+			self.blocked_edges.add((0+i*self.myscale,dimension,0.5+i*self.myscale,dimension))
+			self.blocked_edges.add((0-i*self.myscale,dimension,-0.5-i*self.myscale,dimension))
+			self.blocked_edges.add((0.5+i*self.myscale,dimension-0.5,0.5+i*self.myscale,dimension))
+			self.blocked_edges.add((-0.5-i*self.myscale,dimension-0.5,-0.5-i*self.myscale,dimension))
+			self.blocked_edges.add((dimension,0+i*self.myscale,dimension,0.5+i*self.myscale))
+			self.blocked_edges.add((dimension,0-i*self.myscale,dimension,-0.5-i*self.myscale))
+			self.blocked_edges.add((dimension-0.5,0.5+i*self.myscale,dimension,0.5+i*self.myscale))
+			self.blocked_edges.add((dimension-0.5,-0.5-i*self.myscale,dimension,-0.5-i*self.myscale))
+			self.blocked_edges.add((0+i*self.myscale,-dimension,0.5+i*self.myscale,-dimension))
+			self.blocked_edges.add((0-i*self.myscale,-dimension,-0.5-i*self.myscale,-dimension))
+			self.blocked_edges.add((0.5+i*self.myscale,-dimension+0.5,0.5+i*self.myscale,-dimension))
+			self.blocked_edges.add((-0.5-i*self.myscale,-dimension+0.5,-0.5-i*self.myscale,-dimension))
+		self.walls_list.append((-dimension+dimension*0.3,-dimension+dimension*0.3,0,0,-0,0))
+		self.walls_list.append((-0.12992,-dimension+dimension*0.3,0,0,0,-1.5708))
+		self.walls_list.append((dimension-dimension*0.48,-dimension+dimension*0.6,0,0,-0,1.5708))
+		self.walls_list.append((dimension-dimension*0.90,dimension-dimension*0.85,0,0,0,-1.5708))
+		self.walls_list.append((dimension-dimension*0.3 ,dimension-dimension*0.80,0,0,-0,0))
+		self.walls_list.append((dimension-dimension*0.45,dimension-dimension*0.30,0,0,0,-1.57080))
+		self.walls_list.append((-dimension+dimension*0.6,dimension-dimension*0.30,0,0,-0,0))
+		self.walls_list.append((-dimension+dimension*0.3,-dimension+dimension*0.9,0,0,0,-1.5708))
+		self.bin_list.append((dimension-self.grid_dimension*self.myscale*0.23,-dimension+0.3,0,0,0,0))
+		limit=int(math.ceil(dimension*2*0.3))
+		x_binedge=dimension-self.grid_dimension*self.myscale*0.23-(dimension-self.grid_dimension*self.myscale*0.23)%0.5
+		y_binedge=-dimension+0.3+self.grid_dimension*self.myscale*0.2
+		y_binedge_temp=y_binedge
+		x_binedge_temp=x_binedge
+		while(y_binedge>-dimension):
+			self.bin_loc.append((x_binedge,y_binedge))
+			y_binedge-=self.myscale
+		x_binedge+=self.myscale
+		while(x_binedge<dimension):
+			self.bin_loc.append((x_binedge,y_binedge_temp))
+			x_binedge+=self.myscale
+		#print self.bin_loc
+		bins["bin"]={}
+		self.bin_dict_generator(bins,self.bin_loc,(dimension-self.grid_dimension*self.myscale*0.23,-dimension+0.3))
+		for i in self.bin_loc:
+			x=i[0]
+			y=i[1]
+			while(1):
+				if(x==x_binedge_temp and y==y_binedge_temp):
+					break
+				elif(i[0]==y_binedge_temp):
+					if(y>-dimension):
+						self.blocked_edges.add((x,y,x,y+self.myscale))
+						y+=self.myscale
+					else:
+						break
+				else:
+					if(x<dimension):
+						self.blocked_edges.add((x,y,x+self.myscale,y))
+						x+=self.myscale
+					else:
+						break
+			
+		for i in range(0,limit):
+			self.blocked_edges.add((-dimension+dimension*0.3-((-dimension+dimension*0.3)%0.5)+(i+1)*self.myscale,-dimension+dimension*0.3-((-dimension+dimension*0.3)%0.5),-dimension+dimension*0.3-((-dimension+dimension*0.3)%0.5)+(i+1)*self.myscale,-dimension+dimension*0.3+0.5-((-dimension+dimension*0.3)%0.5)))
+			self.blocked_edges.add((-dimension+dimension*0.3+0.5-((-dimension+dimension*0.3)%0.5)-(i+1)*self.myscale,-dimension+dimension*0.3-((-dimension+dimension*0.3)%0.5),-dimension+dimension*0.3+0.5-((-dimension+dimension*0.3)%0.5)-(i+1)*self.myscale,-dimension+dimension*0.3+0.5-((-dimension+dimension*0.3)%0.5)))
+			self.blocked_edges.add((0.0,-dimension+dimension*0.3-((-dimension+dimension*0.3)%0.5)+(i+1)*self.myscale,-0.5,-dimension+dimension*0.3-((-dimension+dimension*0.3)%0.5)+(i+1)*self.myscale))
+			self.blocked_edges.add((0.0,-dimension+dimension*0.3+0.5-((-dimension+dimension*0.3)%0.5)-(i+1)*self.myscale,-0.5,-dimension+dimension*0.3+0.5-((-dimension+dimension*0.3)%0.5)-(i+1)*self.myscale))
+			self.blocked_edges.add((dimension-dimension*0.48+0.5-((dimension-dimension*0.48)%0.5),-dimension+dimension*0.6-((-dimension+dimension*0.6)%0.5)+(i+1)*self.myscale,dimension-dimension*0.48-((dimension-dimension*0.48)%0.5),-dimension+dimension*0.6-((-dimension+dimension*0.6)%0.5)+(i+1)*self.myscale))
+			self.blocked_edges.add((dimension-dimension*0.48+0.5-((dimension-dimension*0.48)%0.5),-dimension+dimension*0.6+0.5-((-dimension+dimension*0.6)%0.5)-(i+1)*self.myscale,dimension-dimension*0.48-((dimension-dimension*0.48)%0.5),-dimension+dimension*0.6+0.5-((-dimension+dimension*0.6)%0.5)-(i+1)*self.myscale))
+			self.blocked_edges.add((dimension-dimension*0.90+0.5-((dimension-dimension*0.90)%0.5),dimension-dimension*0.85-((dimension-dimension*0.85)%0.5)+(i+1)*self.myscale,dimension-dimension*0.90-((dimension-dimension*0.90)%0.5),dimension-dimension*0.85-((dimension-dimension*0.85)%0.5)+(i+1)*self.myscale))
+			self.blocked_edges.add((dimension-dimension*0.90+0.5-((dimension-dimension*0.90)%0.5),dimension-dimension*0.85+0.5-((dimension-dimension*0.85)%0.5)-(i+1)*self.myscale,dimension-dimension*0.90-((dimension-dimension*0.90)%0.5),dimension-dimension*0.85+0.5-((dimension-dimension*0.85)%0.5)-(i+1)*self.myscale))
+			self.blocked_edges.add((dimension-dimension*0.3-((dimension-dimension*0.3)%0.5)+(i+1)*self.myscale,dimension-dimension*0.80-((dimension-dimension*0.80)%0.5),dimension-dimension*0.3-((dimension-dimension*0.3)%0.5)+(i+1)*self.myscale,dimension-dimension*0.80+0.5-((dimension-dimension*0.80)%0.5)))
+			self.blocked_edges.add((dimension-dimension*0.3+0.5-((dimension-dimension*0.3)%0.5)-(i+1)*self.myscale,dimension-dimension*0.80-((dimension-dimension*0.80)%0.5),dimension-dimension*0.3+0.5-((dimension-dimension*0.3)%0.5)-(i+1)*self.myscale,dimension-dimension*0.80+0.5-((dimension-dimension*0.80)%0.5)))	
+			self.blocked_edges.add((dimension-dimension*0.45+0.5-((dimension-dimension*0.45)%0.5),dimension-dimension*0.30-((dimension-dimension*0.30)%0.5)+(i+1)*self.myscale,dimension-dimension*0.45-((dimension-dimension*0.45)%0.5),dimension-dimension*0.30-((dimension-dimension*0.30)%0.5)+(i+1)*self.myscale))
+			self.blocked_edges.add((dimension-dimension*0.45+0.5-((dimension-dimension*0.45)%0.5),dimension-dimension*0.30+0.5-((dimension-dimension*0.30)%0.5)-(i+1)*self.myscale,dimension-dimension*0.45-((dimension-dimension*0.45)%0.5),dimension-dimension*0.30+0.5-((dimension-dimension*0.30)%0.5)-(i+1)*self.myscale))
+			self.blocked_edges.add((-dimension+dimension*0.6-((-dimension+dimension*0.6)%0.5)+(i+1)*self.myscale,dimension-dimension*0.30-((dimension-dimension*0.30)%0.5),-dimension+dimension*0.6-((-dimension+dimension*0.6)%0.5)+(i+1)*self.myscale,dimension-dimension*0.30+0.5-((dimension-dimension*0.30)%0.5)))
+			self.blocked_edges.add((-dimension+dimension*0.6+0.5-((-dimension+dimension*0.6)%0.5)-(i+1)*self.myscale,dimension-dimension*0.30-((dimension-dimension*0.30)%0.5),-dimension+dimension*0.6+0.5-((-dimension+dimension*0.6)%0.5)-(i+1)*self.myscale,dimension-dimension*0.30+0.5-((dimension-dimension*0.30)%0.5)))
+			self.blocked_edges.add((-dimension+dimension*0.3+0.5-((-dimension+dimension*0.3)%0.5),-dimension+dimension*0.9-((-dimension+dimension*0.9)%0.5)+(i+1)*self.myscale,-dimension+dimension*0.3-((-dimension+dimension*0.3)%0.5),-dimension+dimension*0.9-((-dimension+dimension*0.9)%0.5)+(i+1)*self.myscale))
+			self.blocked_edges.add((-dimension+dimension*0.3+0.5-((-dimension+dimension*0.3)%0.5),-dimension+dimension*0.9+0.5-((-dimension+dimension*0.9)%0.5)-(i+1)*self.myscale,-dimension+dimension*0.3-((-dimension+dimension*0.3)%0.5),-dimension+dimension*0.9+0.5-((-dimension+dimension*0.9)%0.5)-(i+1)*self.myscale))
+		count=0
+		while count<list_of_number_of_cans:
+			x = self.myscale*np.random.randint(0, (self.grid_dimension+1))
+			y = self.myscale*np.random.randint(0, (self.grid_dimension+1))
+			x_sign=random.choice(['-','+'])
+			y_sign=random.choice(['+','-'])
+			offset_y=-self.myscale/4
+			offset_x=-self.myscale/4
+			if(x_sign=='-'):
+				x=x*-1
+				offset_x=self.myscale/4
+			if(y_sign=='-'):
+				y=y*-1
+				offset_y=self.myscale/4
+			if(count%2==0):
+				if(x<0):
+					x1=x+self.myscale
+				else:
+					x1=x-self.myscale
+				y1=y
+				
+				if (((x+x1+offset_x)/2,(y+y1+offset_y)/2,0,0,-0,0) not in self.coke_list) and ((x,y,x1,y1) not in self.blocked_edges) and ((x1,y1,x,y) not in self.blocked_edges) and (x>=1.0 or x<=-1.0) and (y>=1.0 or y<=-1.0) and ((x,y) not in can_loadloc) and ((x1,y1) not in can_loadloc) and ((x,y) not in self.bin_loc) and ((x1,y1) not in self.bin_loc):
+					self.coke_list.append(((x+x1+offset_x)/2,(y+y1+offset_y)/2,0,0,-0,0))
+					cans["can_"+str(count)]={}
+					self.can_dict_generator(cans,count,((x+x1+offset_x)/2,(y+y1+offset_y)/2),(x,y),(x1,y1))
+					count=count+1
+					can_loadloc.append((x,y))
+					can_loadloc.append((x1,y1))
+					self.blocked_edges.add((x,y,x1,y1))
+			else:
+				if(y<0):
+					y1=y+self.myscale
+					
+				else:
+					y1=y-self.myscale
+				x1=x
+				if (((x+x1+offset_x)/2,(y+y1+offset_y)/2,0,0,-0,0) not in self.coke_list) and ((x,y,x1,y1) not in self.blocked_edges) and ((x1,y1,x,y) not in self.blocked_edges) and (x>=1.0 or x<=-1.0) and (y>=1.0 or y<=-1.0) and ((x,y) not in self.bin_loc) and ((x1,y1) not in self.bin_loc):
+					self.coke_list.append(((x+x1+offset_x)/2,(y+y1+offset_y)/2,0,0,-0,0))
+					cans["can_"+str(count)]={}
+					self.can_dict_generator(cans,count,((x+x1+offset_x)/2,(y+y1+offset_y)/2),(x,y),(x1,y1))
+					count=count+1
+					can_loadloc.append((x,y))
+					can_loadloc.append((x1,y1))
+					self.blocked_edges.add((x,y,x1,y1))
+		count=0
+		while count<list_of_number_of_cups:
+			x = self.myscale*np.random.randint(0, (self.grid_dimension+1))
+			y = self.myscale*np.random.randint(0, (self.grid_dimension+1))
+			x_sign=random.choice(['-','+'])
+			y_sign=random.choice(['+','-'])
+			offset_y=-self.myscale/4
+			offset_x=-self.myscale/4
+			if(x_sign=='-'):
+				x=x*-1
+				offset_x=self.myscale/4
+			if(y_sign=='-'):
+				y=y*-1
+				offset_y=self.myscale/4
+			if(count%2==0):
+				if(x<0):
+					x1=x+self.myscale
+				else:
+					x1=x-self.myscale
+				y1=y
+				'''if ((x,y,x1,y1)  in self.blocked_edges) or ((x1,y1,x,y)  in self.blocked_edges):
+					print ((x,y,x1,y1),'is a blocked edg')'''
+				if (((x+x1+offset_x)/2,(y+y1+offset_y)/2,0,0,-0,0) not in self.coke_list) and (((x+x1+offset_x)/2,(y+y1+offset_y)/2,0,0,-0,0) not in self.cup_list) and ((x,y,x1,y1) not in self.blocked_edges) and ((x1,y1,x,y) not in self.blocked_edges) and (x>=1.0 or x<=-1.0) and (y>=1.0 or y<=-1.0) and ((x,y) not in can_loadloc) and ((x1,y1) not in can_loadloc) and ((x,y) not in cup_loadloc) and ((x1,y1) not in cup_loadloc) and ((x,y) not in self.bin_loc) and ((x1,y1) not in self.bin_loc):
+					self.cup_list.append(((x+x1+offset_x)/2,(y+y1+offset_y)/2,0,0,-0,0))
+					cups["cup_"+str(count)]={}
+					self.cup_dict_generator(cups,count,((x+x1+offset_x)/2,(y+y1+offset_y)/2),(x,y),(x1,y1))
+					count=count+1
+					cup_loadloc.append((x,y))
+					cup_loadloc.append((x1,y1))
+					self.blocked_edges.add((x,y,x1,y1))
+			else:
+				if(y<0):
+					y1=y+self.myscale
+				else:
+					y1=y-self.myscale
+				x1=x
+				'''if ((x,y,x1,y1)  in self.blocked_edges) or ((x1,y1,x,y)  in self.blocked_edges):
+					print ((x,y,x1,y1),'is a blocked edge')'''
+				if (((x+x1+offset_x)/2,(y+y1+offset_y)/2,0,0,-0,0) not in self.coke_list) and (((x+x1+offset_x)/2,(y+y1+offset_y)/2,0,0,-0,0) not in self.cup_list) and ((x,y,x1,y1) not in self.blocked_edges) and ((x1,y1,x,y) not in self.blocked_edges) and (x>=1.0 or x<=-1.0) and (y>=1.0 or y<=-1.0) and ((x,y) not in can_loadloc) and ((x1,y1) not in can_loadloc) and ((x,y) not in cup_loadloc) and ((x1,y1) not in cup_loadloc) and ((x,y) not in self.bin_loc) and ((x1,y1) not in self.bin_loc):
+					self.cup_list.append(((x+x1+offset_x)/2,(y+y1+offset_y)/2,0,0,-0,0))
+					cups["cup_"+str(count)]={}
+					self.cup_dict_generator(cups,count,((x+x1+offset_x)/2,(y+y1+offset_y)/2),(x,y),(x1,y1))
+					count=count+1
+					cup_loadloc.append((x,y))
+					cup_loadloc.append((x1,y1))
+					self.blocked_edges.add((x,y,x1,y1))
+		self.add_walls(f_out, self.grid_dimension*self.myscale)		
+		self.add_cans_description(f_out)
+		self.add_walls_description(f_out)
+		object_dict["cans"] = cans
+		object_dict["cups"] = cups
+		object_dict["bins"] = bins
+	 	with open(root_path + '/objects.json', 'w') as fp:
+	 		json.dump(object_dict, fp)
+
+	 	return object_dict
+
+
+if __name__ == "__main__":	
+	subject_count = 6
+	book_sizes = 2
+	book_count_of_each_size = 5
+	book_count_of_each_subject = book_count_of_each_size * book_sizes
+	book_count_list = [book_count_of_each_size] * subject_count * book_sizes
+	number_of_trollies = subject_count * 2
+	grid_size = max((((book_count_of_each_subject * subject_count) / 4) // 1 ) + 1, ((number_of_trollies/4)*7), 10)
+
+	root_path = "/home/ketan/catkin_ws/src/search"
+
+	books, mazeInfo = generate_blocked_edges(grid_size, book_count_list, 2,  number_of_trollies, root_path,0.5)
+
+	# pprint.pprint(books)
+	# print(mazeInfo)
