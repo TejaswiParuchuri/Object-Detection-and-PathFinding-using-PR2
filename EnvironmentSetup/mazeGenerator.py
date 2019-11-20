@@ -291,7 +291,6 @@ class Maze:
 		object_dict["bins"] = bins
 	 	with open(root_path + '/objects.json', 'w') as fp:
 	 		json.dump(object_dict, fp)
-
 	 	return object_dict
 
 
