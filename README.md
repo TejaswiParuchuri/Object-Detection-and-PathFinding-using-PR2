@@ -1,5 +1,19 @@
 # CSE-571-Artificial-Intelligence-Project
 
+#### Installing Moveit
+	sudo apt-get install ros-kinetic-moveit
+	cd ~/catkin_ws/src
+	git clone https://github.com/ros-planning/moveit_pr2.git
+	
+#### Running test pick
+	./env_setup.sh
+      roscore
+      rosrun cse571_project server_fp.py
+      roslaunch cse571_project maze.launch
+      rosrun cse571_project move_pr2.py
+      roslaunch pr2_moveit_config move_group.launch
+      rosrun cse571_project test_pick.py
+
 #### Running a random walk algorithm with pr2 in the maze environment
       ./env_setup.sh
       roscore
