@@ -29,6 +29,7 @@ To Run the inclass API with pr2 copy the cse571_project folder to catkin_ws/src/
 	rosrun cse571_project move_tbot3.py
 	rosrun cse571_project random_walk.py
 To generate new environment automatically with cans and cups:
+
 	replace mazeGenerator.py in scripts folder with given mazeGenerator.py
 	replace server.py in scripts folder with given server.py
 	replace action_server.py in scripts folder with given action_server.py
