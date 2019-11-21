@@ -25,7 +25,6 @@ class RobotActionsServer:
         self.current_state = self.generate_init_state()
         self.action_config = self.load_action_config(root_path + '/action_config_fp.json')
         self.direction_list = ["NORTH","EAST","SOUTH","WEST"]
-        self.goal_state = {"robot":{"x":1, "y":1, "orientation":"SOUTH"}}
         np.random.seed(self.random_seed)
         rospy.Service("execute_action", ActionMsg,self.execute_action)
         rospy.Service('get_all_actions', GetActions, self.get_all_actions)
@@ -38,8 +37,21 @@ class RobotActionsServer:
 
 
     def generate_init_state(self):
-        state = {}
+        state = {"holding":None}
         state['robot'] = {'x': 0.0, 'y': 0.0, 'orientation': 'EAST'}
+        for can in self.object_dict["cans"]:
+            state[can] = {
+                            'x': float(self.object_dict["cans"][can]["loc"][0]), 
+                            'y': float(self.object_dict["cans"][can]["loc"][1]), 
+                            'placed': False
+                        }
+        for cup in self.object_dict["cups"]:
+            state[cup] = {
+                            'x': float(self.object_dict["cups"][cup]["loc"][0]),
+                            'y': float(self.object_dict["cups"][cup]["loc"][1]),
+                        }
+        state["bin"]={'x': float(self.object_dict["bins"]["bin"]["loc"][0]),
+                  'y': float(self.object_dict["bins"]["bin"]["loc"][1]),}
         return state
 
 
@@ -58,13 +70,20 @@ class RobotActionsServer:
         return state['robot']['x'], state['robot']['y'], state['robot']['orientation']
 
 
-    def change_gazebo_state(self, book_name, target_transform):
-        model_state_msg = ModelState()
-        model_state_msg.model_name = book_name
-        model_state_msg.pose.position.x = target_transform[0]
-        model_state_msg.pose.position.y = target_transform[1]
-        model_state_msg.pose.position.z = target_transform[2]
-        self.model_state_publisher.publish(model_state_msg)
+    def release_object(self, object_name):
+        print("TODO: Release Object {}".format(object_name))
+
+    def grasp_can(self, can_name):
+        print("TODO: Grasp Can {}".format(can_name))
+
+    def remove_edge(self, book_name):
+        rospy.wait_for_service('remove_blocked_edge')
+        try:
+            remove_edge = rospy.ServiceProxy('remove_blocked_edge',RemoveBlockedEdgeMsg)
+            _ = remove_edge(book_name)
+        except rospy.ServiceException,e:
+            print "Sevice call failed: %s"%e
+
 
     def check_edge(self, x1, y1, x2, y2):
         rospy.wait_for_service('check_is_edge')
@@ -85,9 +104,14 @@ class RobotActionsServer:
 
 
     def is_terminal_state(self, state):
-        if(self.goal_state["robot"]["x"] == state["robot"]["x"] and \
-            self.goal_state["robot"]["y"] == state["robot"]["y"] and \
-            self.goal_state["robot"]["orientation"] == state["robot"]["orientation"]):
+        # Terminal state is reached when all books are placed
+        cnt = 0
+        for key in state.keys():
+            if key.startswith('cans'):
+                if state[key]['placed']:
+                    cnt += 1
+
+        if cnt == len(self.object_dict["cans"].keys()):
             return 1
         else:
             return 0
@@ -101,7 +125,7 @@ class RobotActionsServer:
         state = req.state
         
         # These actions are executable anywhere in the environment
-        action_list = ['TurnCW', 'TurnCCW']
+        action_list = ['sense', 'pick', 'place', 'TurnCW', 'TurnCCW']
 
         # Check if we can execute moveF
         success, next_state = self.execute_moveF(state)
@@ -177,6 +201,76 @@ class RobotActionsServer:
         # Update state
         self.current_state = copy.deepcopy(next_state)
         return success, json.dumps(next_state)
+
+    def execute_sense(self, current_state, simulation=False):
+        print("TODO: execute_sense function")
+        current_state = json.loads(current_state)
+        next_state = copy.deepcopy(current_state)
+        return self.success, next_state
+
+    def execute_place(self, can_name, bin_name, current_state, simulation=False):
+        current_state = json.loads(current_state)
+        robot_state = self.get_turtlebot_location(current_state)
+        next_state = copy.deepcopy(current_state)
+
+        ### Kirtus: Check if we are holding the can
+        if can_name != current_state["holding"]:
+            self.status_publisher.publish(self.status)
+            return self.failure, current_state
+
+        ### Kirtus: Validate CAN and BIN
+        if can_name in self.object_dict["cans"] and bin_name in self.object_dict["bins"]:
+            ### Kirtus: Make sure we are at the right location
+            if (robot_state[0],robot_state[1]) in self.object_dict["bins"][bin_name]["load_loc"]:
+                # Kirtus: simulation update
+                if simulation:
+                    goal_loc = list(self.object_dict["bins"][bin_name]["loc"])
+                    goal_loc[0] = goal_loc[0] + 0.5
+                    goal_loc[1] = goal_loc[1] + 0.5
+                    self.release_object(book_name)
+                    rospy.Rate(1).sleep()
+                    
+                self.status_publisher.publish(self.status)
+
+                # Update state
+                next_state[can_name]['x'] = -1
+                next_state[can_name]['y'] = -1
+                next_state[can_name]['placed'] = True
+                next_state['holding'] = None
+                    
+        return self.success, next_state
+        
+        self.status_publisher.publish(self.status)
+        return self.failure, next_state
+
+    def execute_pick(self, can_name, current_state, simulation=False):
+        current_state = json.loads(current_state)
+        robot_state = self.get_turtlebot_location(current_state)
+        next_state = copy.deepcopy(current_state)
+
+        # Kirtus: validation
+        if can_name in self.object_dict["cans"] and not current_state[can_name]['placed']:
+            # Robot is at the load location for the book
+            if (robot_state[0],robot_state[1]) in self.object_dict["cans"][can_name]["load_loc"]:
+                # Basket is empty
+                if current_state['holding'] is None:
+                    
+                    #Kirtus: Simulation update
+                    if simulation:
+                        self.grasp_can(can_name)
+                        rospy.Rate(1).sleep()
+
+                    self.status_publisher.publish(self.status)
+
+                    #Kirtus: pick up the can
+                    next_state['holding'] = can_name
+                    next_state[can_name]['x'] = -1
+                    next_state[can_name]['y'] = -1
+
+                    return self.success, next_state
+
+        self.status_publisher.publish(self.status)
+        return self.failure, next_state
 
     def execute_moveF(self, current_state, simulation=False):
         current_state = json.loads(current_state)
