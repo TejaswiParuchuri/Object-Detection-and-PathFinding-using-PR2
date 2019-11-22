@@ -1,5 +1,8 @@
 # CSE-571-Artificial-Intelligence-Project
 
+#### Install the required libraries
+	pip install -r requirements.txt
+	
 #### Installing Moveit
 	sudo apt-get install ros-kinetic-moveit
 	cd ~/catkin_ws/src
