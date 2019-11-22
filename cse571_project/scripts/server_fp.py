@@ -71,10 +71,10 @@ if __name__ == "__main__":
 	n_cans = args.n_cans
 	n_cups = args.n_cups
 	seed = args.seed
-	print "n_cans: ", n_cans
-	print "n_caps:", n_cups
+	print "n_coke_cans: ", n_cans
+	print "n_plastic_cups:", n_cups
 	if n_cans > 20:
-		print('Maximum no. of subjects available is: 20')
+		print('Maximum no. of coke cans available is: 20')
 		exit()
 	# grid_size = max((((book_count_of_each_subject * n_subjects) / 4) // 1 ) + 1, ((number_of_trollies/4)*7), 10)
 	grid_size = 6 * (n_cans//4)

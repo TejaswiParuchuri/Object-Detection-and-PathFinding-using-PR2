@@ -670,7 +670,7 @@
         <kinematic>0</kinematic>
         <gravity>1</gravity>
       </link>
-      <pose frame=''>0.6875 -5.4375 0 0 0 0</pose>
+      <pose frame=''>-4.6875 -1.9375 0 0 0 0</pose>
     </model><model name='coke_can1'>
 	<link name='link'>
         <inertial>
@@ -719,7 +719,7 @@
         <kinematic>0</kinematic>
         <gravity>1</gravity>
       </link>
-      <pose frame=''>3.4375 3.6875 0 0 0 0</pose>
+      <pose frame=''>-3.4375 -2.6875 0 0 0 0</pose>
     </model><model name='coke_can2'>
 	<link name='link'>
         <inertial>
@@ -768,7 +768,7 @@
         <kinematic>0</kinematic>
         <gravity>1</gravity>
       </link>
-      <pose frame=''>-0.6875 -4.9375 0 0 0 0</pose>
+      <pose frame=''>-5.1875 -1.4375 0 0 0 0</pose>
     </model><model name='coke_can3'>
 	<link name='link'>
         <inertial>
@@ -817,7 +817,7 @@
         <kinematic>0</kinematic>
         <gravity>1</gravity>
       </link>
-      <pose frame=''>-3.9375 -2.1875 0 0 0 0</pose>
+      <pose frame=''>-1.4375 -0.6875 0 0 0 0</pose>
     </model><model name='coke_can4'>
 	<link name='link'>
         <inertial>
@@ -866,7 +866,7 @@
         <kinematic>0</kinematic>
         <gravity>1</gravity>
       </link>
-      <pose frame=''>0.6875 -2.4375 0 0 0 0</pose>
+      <pose frame=''>-2.1875 -2.9375 0 0 0 0</pose>
     </model><model name='coke_can5'>
 	<link name='link'>
         <inertial>
@@ -915,7 +915,7 @@
         <kinematic>0</kinematic>
         <gravity>1</gravity>
       </link>
-      <pose frame=''>3.4375 -2.6875 0 0 0 0</pose>
+      <pose frame=''>0.9375 -3.6875 0 0 0 0</pose>
     </model><model name='coke_can6'>
 	<link name='link'>
         <inertial>
@@ -964,7 +964,7 @@
         <kinematic>0</kinematic>
         <gravity>1</gravity>
       </link>
-      <pose frame=''>1.6875 -1.4375 0 0 0 0</pose>
+      <pose frame=''>-3.6875 -3.9375 0 0 0 0</pose>
     </model><model name='coke_can7'>
 	<link name='link'>
         <inertial>
@@ -1013,7 +1013,7 @@
         <kinematic>0</kinematic>
         <gravity>1</gravity>
       </link>
-      <pose frame=''>-3.9375 -2.6875 0 0 0 0</pose>
+      <pose frame=''>2.9375 2.1875 0 0 0 0</pose>
     </model><model name='plastic_cup0'>
       <link name='link'>
         <pose frame=''>0 0 0.065 0 -0 0</pose>
@@ -1077,7 +1077,7 @@
         <kinematic>0</kinematic>
         <gravity>1</gravity>
       </link>
-      <pose frame=''>3.6875 0.9375 0 0 0 0</pose>
+      <pose frame=''>5.1875 2.9375 0 0 0 0</pose>
     </model><model name='plastic_cup1'>
       <link name='link'>
         <pose frame=''>0 0 0.065 0 -0 0</pose>
@@ -1141,7 +1141,7 @@
         <kinematic>0</kinematic>
         <gravity>1</gravity>
       </link>
-      <pose frame=''>3.9375 2.1875 0 0 0 0</pose>
+      <pose frame=''>1.4375 1.1875 0 0 0 0</pose>
     </model><model name='plastic_cup2'>
       <link name='link'>
         <pose frame=''>0 0 0.065 0 -0 0</pose>
@@ -1205,7 +1205,7 @@
         <kinematic>0</kinematic>
         <gravity>1</gravity>
       </link>
-      <pose frame=''>4.1875 5.4375 0 0 0 0</pose>
+      <pose frame=''>-5.1875 5.4375 0 0 0 0</pose>
     </model><model name='plastic_cup3'>
       <link name='link'>
         <pose frame=''>0 0 0.065 0 -0 0</pose>
@@ -1269,7 +1269,7 @@
         <kinematic>0</kinematic>
         <gravity>1</gravity>
       </link>
-      <pose frame=''>2.4375 0.6875 0 0 0 0</pose>
+      <pose frame=''>3.4375 -4.1875 0 0 0 0</pose>
     </model><model name='plastic_cup4'>
       <link name='link'>
         <pose frame=''>0 0 0.065 0 -0 0</pose>
@@ -1333,7 +1333,7 @@
         <kinematic>0</kinematic>
         <gravity>1</gravity>
       </link>
-      <pose frame=''>-5.1875 -2.9375 0 0 0 0</pose>
+      <pose frame=''>-1.1875 -1.9375 0 0 0 0</pose>
     </model><model name='plastic_cup5'>
       <link name='link'>
         <pose frame=''>0 0 0.065 0 -0 0</pose>
@@ -1397,7 +1397,7 @@
         <kinematic>0</kinematic>
         <gravity>1</gravity>
       </link>
-      <pose frame=''>2.9375 -4.1875 0 0 0 0</pose>
+      <pose frame=''>3.4375 -5.1875 0 0 0 0</pose>
     </model><model name='plastic_cup6'>
       <link name='link'>
         <pose frame=''>0 0 0.065 0 -0 0</pose>
@@ -1461,7 +1461,7 @@
         <kinematic>0</kinematic>
         <gravity>1</gravity>
       </link>
-      <pose frame=''>-1.1875 -3.9375 0 0 0 0</pose>
+      <pose frame=''>0.6875 5.4375 0 0 0 0</pose>
     </model><model name='plastic_cup7'>
       <link name='link'>
         <pose frame=''>0 0 0.065 0 -0 0</pose>
@@ -1525,7 +1525,7 @@
         <kinematic>0</kinematic>
         <gravity>1</gravity>
       </link>
-      <pose frame=''>-4.9375 4.6875 0 0 0 0</pose>
+      <pose frame=''>-0.9375 -4.6875 0 0 0 0</pose>
     </model><model name='pr2_bin'>
       <link name='link'>
         <pose frame=''>0 0 0 0 -0 0</pose>
@@ -1583,73 +1583,73 @@
 <pose frame=''>0.34992 -0.526986 0 0 -0 0</pose>
     <scale>1 1 1</scale>
 <model name='coke_can0'>
-        <pose frame=''>0.6875 -5.4375 0 0 0 0</pose>
+        <pose frame=''>-4.6875 -1.9375 0 0 0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose frame=''>0.6875 -5.4375 0 0 0 0</pose>
+          <pose frame=''>-4.6875 -1.9375 0 0 0 0</pose>
           <velocity>-7.4e-05 0.000547 0.002754 0.209596 0.022304 0.003201</velocity>
           <acceleration>-0.096311 -0.13049 3.57572 -2.45192 0.965952 -2.20851</acceleration>
           <wrench>-0.037561 -0.050891 1.39453 0 -0 0</wrench>
         </link>
       </model><model name='coke_can1'>
-        <pose frame=''>3.4375 3.6875 0 0 0 0</pose>
+        <pose frame=''>-3.4375 -2.6875 0 0 0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose frame=''>3.4375 3.6875 0 0 0 0</pose>
+          <pose frame=''>-3.4375 -2.6875 0 0 0 0</pose>
           <velocity>-7.4e-05 0.000547 0.002754 0.209596 0.022304 0.003201</velocity>
           <acceleration>-0.096311 -0.13049 3.57572 -2.45192 0.965952 -2.20851</acceleration>
           <wrench>-0.037561 -0.050891 1.39453 0 -0 0</wrench>
         </link>
       </model><model name='coke_can2'>
-        <pose frame=''>-0.6875 -4.9375 0 0 0 0</pose>
+        <pose frame=''>-5.1875 -1.4375 0 0 0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose frame=''>-0.6875 -4.9375 0 0 0 0</pose>
+          <pose frame=''>-5.1875 -1.4375 0 0 0 0</pose>
           <velocity>-7.4e-05 0.000547 0.002754 0.209596 0.022304 0.003201</velocity>
           <acceleration>-0.096311 -0.13049 3.57572 -2.45192 0.965952 -2.20851</acceleration>
           <wrench>-0.037561 -0.050891 1.39453 0 -0 0</wrench>
         </link>
       </model><model name='coke_can3'>
-        <pose frame=''>-3.9375 -2.1875 0 0 0 0</pose>
+        <pose frame=''>-1.4375 -0.6875 0 0 0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose frame=''>-3.9375 -2.1875 0 0 0 0</pose>
+          <pose frame=''>-1.4375 -0.6875 0 0 0 0</pose>
           <velocity>-7.4e-05 0.000547 0.002754 0.209596 0.022304 0.003201</velocity>
           <acceleration>-0.096311 -0.13049 3.57572 -2.45192 0.965952 -2.20851</acceleration>
           <wrench>-0.037561 -0.050891 1.39453 0 -0 0</wrench>
         </link>
       </model><model name='coke_can4'>
-        <pose frame=''>0.6875 -2.4375 0 0 0 0</pose>
+        <pose frame=''>-2.1875 -2.9375 0 0 0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose frame=''>0.6875 -2.4375 0 0 0 0</pose>
+          <pose frame=''>-2.1875 -2.9375 0 0 0 0</pose>
           <velocity>-7.4e-05 0.000547 0.002754 0.209596 0.022304 0.003201</velocity>
           <acceleration>-0.096311 -0.13049 3.57572 -2.45192 0.965952 -2.20851</acceleration>
           <wrench>-0.037561 -0.050891 1.39453 0 -0 0</wrench>
         </link>
       </model><model name='coke_can5'>
-        <pose frame=''>3.4375 -2.6875 0 0 0 0</pose>
+        <pose frame=''>0.9375 -3.6875 0 0 0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose frame=''>3.4375 -2.6875 0 0 0 0</pose>
+          <pose frame=''>0.9375 -3.6875 0 0 0 0</pose>
           <velocity>-7.4e-05 0.000547 0.002754 0.209596 0.022304 0.003201</velocity>
           <acceleration>-0.096311 -0.13049 3.57572 -2.45192 0.965952 -2.20851</acceleration>
           <wrench>-0.037561 -0.050891 1.39453 0 -0 0</wrench>
         </link>
       </model><model name='coke_can6'>
-        <pose frame=''>1.6875 -1.4375 0 0 0 0</pose>
+        <pose frame=''>-3.6875 -3.9375 0 0 0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose frame=''>1.6875 -1.4375 0 0 0 0</pose>
+          <pose frame=''>-3.6875 -3.9375 0 0 0 0</pose>
           <velocity>-7.4e-05 0.000547 0.002754 0.209596 0.022304 0.003201</velocity>
           <acceleration>-0.096311 -0.13049 3.57572 -2.45192 0.965952 -2.20851</acceleration>
           <wrench>-0.037561 -0.050891 1.39453 0 -0 0</wrench>
         </link>
       </model><model name='coke_can7'>
-        <pose frame=''>-3.9375 -2.6875 0 0 0 0</pose>
+        <pose frame=''>2.9375 2.1875 0 0 0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose frame=''>-3.9375 -2.6875 0 0 0 0</pose>
+          <pose frame=''>2.9375 2.1875 0 0 0 0</pose>
           <velocity>-7.4e-05 0.000547 0.002754 0.209596 0.022304 0.003201</velocity>
           <acceleration>-0.096311 -0.13049 3.57572 -2.45192 0.965952 -2.20851</acceleration>
           <wrench>-0.037561 -0.050891 1.39453 0 -0 0</wrench>
@@ -1665,73 +1665,73 @@
         </link>
       </model>
 <model name='plastic_cup0'>
-        <pose frame=''>3.6875 0.9375 0 0 0 0</pose>
+        <pose frame=''>5.1875 2.9375 0 0 0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose frame=''>3.6875 0.9375 0 0 0 0</pose>
+          <pose frame=''>5.1875 2.9375 0 0 0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
       </model><model name='plastic_cup1'>
-        <pose frame=''>3.9375 2.1875 0 0 0 0</pose>
+        <pose frame=''>1.4375 1.1875 0 0 0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose frame=''>3.9375 2.1875 0 0 0 0</pose>
+          <pose frame=''>1.4375 1.1875 0 0 0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
       </model><model name='plastic_cup2'>
-        <pose frame=''>4.1875 5.4375 0 0 0 0</pose>
+        <pose frame=''>-5.1875 5.4375 0 0 0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose frame=''>4.1875 5.4375 0 0 0 0</pose>
+          <pose frame=''>-5.1875 5.4375 0 0 0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
       </model><model name='plastic_cup3'>
-        <pose frame=''>2.4375 0.6875 0 0 0 0</pose>
+        <pose frame=''>3.4375 -4.1875 0 0 0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose frame=''>2.4375 0.6875 0 0 0 0</pose>
+          <pose frame=''>3.4375 -4.1875 0 0 0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
       </model><model name='plastic_cup4'>
-        <pose frame=''>-5.1875 -2.9375 0 0 0 0</pose>
+        <pose frame=''>-1.1875 -1.9375 0 0 0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose frame=''>-5.1875 -2.9375 0 0 0 0</pose>
+          <pose frame=''>-1.1875 -1.9375 0 0 0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
       </model><model name='plastic_cup5'>
-        <pose frame=''>2.9375 -4.1875 0 0 0 0</pose>
+        <pose frame=''>3.4375 -5.1875 0 0 0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose frame=''>2.9375 -4.1875 0 0 0 0</pose>
+          <pose frame=''>3.4375 -5.1875 0 0 0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
       </model><model name='plastic_cup6'>
-        <pose frame=''>-1.1875 -3.9375 0 0 0 0</pose>
+        <pose frame=''>0.6875 5.4375 0 0 0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose frame=''>-1.1875 -3.9375 0 0 0 0</pose>
+          <pose frame=''>0.6875 5.4375 0 0 0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
       </model><model name='plastic_cup7'>
-        <pose frame=''>-4.9375 4.6875 0 0 0 0</pose>
+        <pose frame=''>-0.9375 -4.6875 0 0 0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose frame=''>-4.9375 4.6875 0 0 0 0</pose>
+          <pose frame=''>-0.9375 -4.6875 0 0 0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
