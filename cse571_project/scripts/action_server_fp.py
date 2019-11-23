@@ -14,6 +14,7 @@ from collections import namedtuple
 class RobotActionsServer:
 
     def __init__(self, object_dict, root_path, random_seed=10):
+        
         self.object_dict = object_dict
         self.failure = -1
         self.success = 1

@@ -99,6 +99,7 @@ def pick():
 	current_joints = group.get_current_joint_values()
 
 def point_head_at_can():
+
 	print("Pointing Head...")
 
 	gms_func = rospy.ServiceProxy( '/gazebo/get_model_state', GetModelState)
@@ -113,12 +114,14 @@ def point_head_at_can():
 	point.point.x = can_pose.x
 	point.point.y = can_pose.y
 	point.point.z = can_pose.z
+
 	data.goal = PointHeadGoal()
 	data.goal.target = point
 	data.goal.pointing_frame = "high_def_frame"
 	data.goal.pointing_axis.x = 1
 	data.goal.pointing_axis.y = 0
 	data.goal.pointing_axis.z = 0
+
 	headpub.publish(data)
 
 # # reset_joints()
