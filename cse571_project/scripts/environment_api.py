@@ -23,6 +23,7 @@ def get_current_state():
 
 
 def is_terminal_state(state):
+
     rospy.wait_for_service('is_terminal_state')
     try:
         is_term_state = rospy.ServiceProxy('is_terminal_state', IsTerminalState)
@@ -33,6 +34,7 @@ def is_terminal_state(state):
 
 
 def reset_world():
+
     rospy.wait_for_service('reset_world')
     try:
         handle = rospy.ServiceProxy('reset_world', ResetWorldMsg)
@@ -49,6 +51,7 @@ def get_all_actions():
                  y_cord - current y-cordinate of turtlebot                     0 : if current state is not the goal state
     """
     rospy.wait_for_service('get_all_actions')
+
     try:
         all_actions = rospy.ServiceProxy('get_all_actions', GetActions)
         response = all_actions()
@@ -58,6 +61,7 @@ def get_all_actions():
 
 
 def get_possible_actions(state):
+    
     rospy.wait_for_service('get_possible_actions')
     try:
         possible_actions = rospy.ServiceProxy('get_possible_actions', GetPossibleActions)

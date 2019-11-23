@@ -25,7 +25,7 @@ import moveit_msgs.msg
 from moveit_commander.conversions import pose_to_list
 
 from gazebo_msgs.srv import GetModelState
-from sensor_msgs.msg import CompressedImage
+from sensor_msgs.msg import CompressedImage, Image
 from geometry_msgs.msg import PointStamped
 from pr2_controllers_msgs.msg import PointHeadActionGoal
 from pr2_controllers_msgs.msg import PointHeadGoal
@@ -97,17 +97,18 @@ class ObjectClassifier:
 
 	def __init__(self):
 
+		rospy.init_node('ObjectClassifier', anonymous=True)
+
 		self.root_path = os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir))
-
 		
-		# Initialize rostopic: /wide_stereo/right/image_color/compressed, where we will publish the results
-		self.image_pub = rospy.Publisher('/wide_stereo/right/image/compressed', CompressedImage, queue_size=1)
+		# Initialize publisher
+		
 
-		# Intialize subscriber 
-		self.subscriber = rospy.Subscriber('/wide_stereo/right/image/compressed', CompressedImage, self.callback, queue_size=1)
+		# Initialize subscriber 
+		self.subscriber = rospy.Subscriber('/wide_stereo/right/image_color', Image, self.callback)		
 
 		if VERBOSE:
-			print 'Subscribed to PR2 /wide_stereo/right/image/compressed topic'
+			print 'Subscribed to PR2 camera topic'
 		
 
 	def train_classifier(self):
@@ -189,40 +190,31 @@ class ObjectClassifier:
 	def callback(self, ros_data):
 
 		'''
-		Callback function for the subscribed topic.
+		Callback function for the subscribed topic. This function predicts the type of 
+		object found in the image and then publishes it to the arm_joint topic.
 		'''
+
 		print ('Callback function...')
 
-		if VERBOSE:
-			print 'Received image of type: "%s"' % ros_data.format
+		print(self.predict_class(ros_data))
 
-		# Convert compressed image to cv2 image
-		np_arr = np.fromstring(ros_data.data, np.uint8)
-		image_np = cv2.imdecode(np_arr, cv2.CV_LOAD_IMAGE_COLOR)
-
-
-		# Perform the image classification part here
-
+		self.subscriber.unregister()
 
 		# Publish the result to arm_joint topic to indicate whether or not to pick up this object
 
 
 if __name__=='__main__':
 
-	#obj_classifier = ObjectClassifier()
-	#rospy.init_node('ObjectClassifier', anonymous=True)
+	#moveit_commander.roscpp_initialize(sys.argv)
+	
+	#robot = moveit_commander.RobotCommander()
 
-
-	moveit_commander.roscpp_initialize(sys.argv)
-	rospy.init_node('move_group_python',
-                anonymous=True)
-	robot = moveit_commander.RobotCommander()
-
-	scene = moveit_commander.PlanningSceneInterface()
+	#scene = moveit_commander.PlanningSceneInterface()
 
 	obj = ObjectClassifier()
 
 	try:
 		rospy.spin()
+
 	except KeyboardInterrupt:
 		print 'Keyboard Interrupt'
