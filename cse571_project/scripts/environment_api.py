@@ -21,9 +21,16 @@ def get_current_state():
     except rospy.ServiceException, e:
         print "Service call failed: %s"%e
 
-
+def get_initial_state(state):
+    rospy.wait_for_service('get_turtlebot_location')
+    print state
+    try:
+        get_initial_state = rospy.ServiceProxy('get_turtlebot_location', GetTurtleBotState)
+	response = get_turtlebot_location(json.dumps(state))
+        return response
+    except rospy.ServiceException, e:
+        print "Service call failed: %s"%e
 def is_terminal_state(state):
-
     rospy.wait_for_service('is_terminal_state')
     try:
         is_term_state = rospy.ServiceProxy('is_terminal_state', IsTerminalState)
@@ -34,7 +41,6 @@ def is_terminal_state(state):
 
 
 def reset_world():
-
     rospy.wait_for_service('reset_world')
     try:
         handle = rospy.ServiceProxy('reset_world', ResetWorldMsg)
@@ -51,7 +57,6 @@ def get_all_actions():
                  y_cord - current y-cordinate of turtlebot                     0 : if current state is not the goal state
     """
     rospy.wait_for_service('get_all_actions')
-
     try:
         all_actions = rospy.ServiceProxy('get_all_actions', GetActions)
         response = all_actions()
@@ -61,7 +66,6 @@ def get_all_actions():
 
 
 def get_possible_actions(state):
-    
     rospy.wait_for_service('get_possible_actions')
     try:
         possible_actions = rospy.ServiceProxy('get_possible_actions', GetPossibleActions)
@@ -105,4 +109,41 @@ def execute_action(action, action_params):
         return response.success, json.loads(response.next_state)
     except rospy.ServiceException, e:
         print "Service call failed: %s"%e
+def get_successor(state, action):
+        rospy.wait_for_service('get_successor')
+        try:
+            get_successor = rospy.ServiceProxy('get_successor', GetSuccessor)
+            response = get_successor(state.x,state.y,state.orientation, action)
+            return State(response.x, response.y, response.direction), response.g_cost
+        except rospy.ServiceException, e:
+            print "Service call failed: %s"%e
+
+class State:
+    """
+    This class defines the state of the TurtleBot.
+
+    """
+
+    def __init__(self,x,y,orientation):
+        """
+        :param x: current x-cordinate of turtlebot
+        :type x: float
+        :param y: current x-cordinate of turtlebot
+        :type y: float   
+        :param orientation: current orientation of turtlebot, can be either NORTH, SOUTH, EAST, WEST
+        :type orientation: float
+
+        """  
+        self.x  = x 
+        self.y = y
+        self.orientation = orientation
+
+    def __eq__(self,other):
+        if self.x == other.x and self.y == other.y and self.orientation == other.orientation:
+            return True
+        else:
+            return False
+
+    def __repr__(self):
+        return "({}, {}, {})".format(str(self.x), str(self.y), str(self.orientation))
 
