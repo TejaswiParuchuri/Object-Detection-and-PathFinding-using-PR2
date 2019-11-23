@@ -110,6 +110,7 @@ class Maze:
 		bins={}
 		can_loadloc=[]
 		cup_loadloc=[]
+		walls_loadloc=[]
 		np.random.seed(seed)
 		f_out = self.copy_empty_world(root_path)
 		dimension=self.grid_dimension*self.myscale
@@ -181,25 +182,90 @@ class Maze:
 		#y_loc=()
 		for i in range(0,limit):
 			self.blocked_edges.add((-dimension+dimension*0.3-((-dimension+dimension*0.3)%0.5)+(i+1)*self.myscale,-dimension+dimension*0.3-((-dimension+dimension*0.3)%0.5),-dimension+dimension*0.3-((-dimension+dimension*0.3)%0.5)+(i+1)*self.myscale,-dimension+dimension*0.3+0.5-((-dimension+dimension*0.3)%0.5)))
-			#y_loc.append(-dimension+dimension*0.3-((-dimension+dimension*0.3)%0.5))
-			#y_loc.append(-dimension+dimension*0.3+0.5-((-dimension+dimension*0.3)%0.5))
+
+			walls_loadloc.append((-dimension+dimension*0.3-((-dimension+dimension*0.3)%0.5)+(i+1)*self.myscale,-dimension+dimension*0.3-((-dimension+dimension*0.3)%0.5)))
+			walls_loadloc.append((-dimension+dimension*0.3-((-dimension+dimension*0.3)%0.5)+(i+1)*self.myscale,-dimension+dimension*0.3+0.5-((-dimension+dimension*0.3)%0.5)))
+	
 			self.blocked_edges.add((-dimension+dimension*0.3+0.5-((-dimension+dimension*0.3)%0.5)-(i+1)*self.myscale,-dimension+dimension*0.3-((-dimension+dimension*0.3)%0.5),-dimension+dimension*0.3+0.5-((-dimension+dimension*0.3)%0.5)-(i+1)*self.myscale,-dimension+dimension*0.3+0.5-((-dimension+dimension*0.3)%0.5)))
+
+			walls_loadloc.append((-dimension+dimension*0.3+0.5-((-dimension+dimension*0.3)%0.5)-(i+1)*self.myscale,-dimension+dimension*0.3-((-dimension+dimension*0.3)%0.5)))
+			walls_loadloc.append((-dimension+dimension*0.3+0.5-((-dimension+dimension*0.3)%0.5)-(i+1)*self.myscale,-dimension+dimension*0.3+0.5-((-dimension+dimension*0.3)%0.5)))
+
+
 			self.blocked_edges.add((0.0,-dimension+dimension*0.3-((-dimension+dimension*0.3)%0.5)+(i+1)*self.myscale,-0.5,-dimension+dimension*0.3-((-dimension+dimension*0.3)%0.5)+(i+1)*self.myscale))
+
+			walls_loadloc.append((0.0,-dimension+dimension*0.3-((-dimension+dimension*0.3)%0.5)+(i+1)*self.myscale))
+			walls_loadloc.append((-0.5,-dimension+dimension*0.3-((-dimension+dimension*0.3)%0.5)+(i+1)*self.myscale))
+
 			self.blocked_edges.add((0.0,-dimension+dimension*0.3+0.5-((-dimension+dimension*0.3)%0.5)-(i+1)*self.myscale,-0.5,-dimension+dimension*0.3+0.5-((-dimension+dimension*0.3)%0.5)-(i+1)*self.myscale))
+
+			walls_loadloc.append((0.0,-dimension+dimension*0.3+0.5-((-dimension+dimension*0.3)%0.5)-(i+1)*self.myscale))
+			walls_loadloc.append((-0.5,-dimension+dimension*0.3+0.5-((-dimension+dimension*0.3)%0.5)-(i+1)*self.myscale))
+
 			self.blocked_edges.add((dimension-dimension*0.48+0.5-((dimension-dimension*0.48)%0.5),-dimension+dimension*0.6-((-dimension+dimension*0.6)%0.5)+(i+1)*self.myscale,dimension-dimension*0.48-((dimension-dimension*0.48)%0.5),-dimension+dimension*0.6-((-dimension+dimension*0.6)%0.5)+(i+1)*self.myscale))
+
+			walls_loadloc.append((dimension-dimension*0.48+0.5-((dimension-dimension*0.48)%0.5),-dimension+dimension*0.6-((-dimension+dimension*0.6)%0.5)+(i+1)*self.myscale))
+			walls_loadloc.append((dimension-dimension*0.48-((dimension-dimension*0.48)%0.5),-dimension+dimension*0.6-((-dimension+dimension*0.6)%0.5)+(i+1)*self.myscale))
+
 			self.blocked_edges.add((dimension-dimension*0.48+0.5-((dimension-dimension*0.48)%0.5),-dimension+dimension*0.6+0.5-((-dimension+dimension*0.6)%0.5)-(i+1)*self.myscale,dimension-dimension*0.48-((dimension-dimension*0.48)%0.5),-dimension+dimension*0.6+0.5-((-dimension+dimension*0.6)%0.5)-(i+1)*self.myscale))
+
+			walls_loadloc.append((dimension-dimension*0.48+0.5-((dimension-dimension*0.48)%0.5),-dimension+dimension*0.6+0.5-((-dimension+dimension*0.6)%0.5)-(i+1)*self.myscale))
+			walls_loadloc.append((dimension-dimension*0.48-((dimension-dimension*0.48)%0.5),-dimension+dimension*0.6+0.5-((-dimension+dimension*0.6)%0.5)-(i+1)*self.myscale))
+
 			self.blocked_edges.add((dimension-dimension*0.90+0.5-((dimension-dimension*0.90)%0.5),dimension-dimension*0.85-((dimension-dimension*0.85)%0.5)+(i+1)*self.myscale,dimension-dimension*0.90-((dimension-dimension*0.90)%0.5),dimension-dimension*0.85-((dimension-dimension*0.85)%0.5)+(i+1)*self.myscale))
+
+			walls_loadloc.append((dimension-dimension*0.90+0.5-((dimension-dimension*0.90)%0.5),dimension-dimension*0.85-((dimension-dimension*0.85)%0.5)+(i+1)*self.myscale))
+			walls_loadloc.append((dimension-dimension*0.90-((dimension-dimension*0.90)%0.5),dimension-dimension*0.85-((dimension-dimension*0.85)%0.5)+(i+1)*self.myscale))
+
 			self.blocked_edges.add((dimension-dimension*0.90+0.5-((dimension-dimension*0.90)%0.5),dimension-dimension*0.85+0.5-((dimension-dimension*0.85)%0.5)-(i+1)*self.myscale,dimension-dimension*0.90-((dimension-dimension*0.90)%0.5),dimension-dimension*0.85+0.5-((dimension-dimension*0.85)%0.5)-(i+1)*self.myscale))
+
+			walls_loadloc.append((dimension-dimension*0.90+0.5-((dimension-dimension*0.90)%0.5),dimension-dimension*0.85+0.5-((dimension-dimension*0.85)%0.5)-(i+1)*self.myscale))
+			walls_loadloc.append((dimension-dimension*0.90-((dimension-dimension*0.90)%0.5),dimension-dimension*0.85+0.5-((dimension-dimension*0.85)%0.5)-(i+1)*self.myscale))
+
 			self.blocked_edges.add((dimension-dimension*0.3-((dimension-dimension*0.3)%0.5)+(i+1)*self.myscale,dimension-dimension*0.80-((dimension-dimension*0.80)%0.5),dimension-dimension*0.3-((dimension-dimension*0.3)%0.5)+(i+1)*self.myscale,dimension-dimension*0.80+0.5-((dimension-dimension*0.80)%0.5)))
+
+			walls_loadloc.append((dimension-dimension*0.3-((dimension-dimension*0.3)%0.5)+(i+1)*self.myscale,dimension-dimension*0.80-((dimension-dimension*0.80)%0.5)))
+			walls_loadloc.append((dimension-dimension*0.3-((dimension-dimension*0.3)%0.5)+(i+1)*self.myscale,dimension-dimension*0.80+0.5-((dimension-dimension*0.80)%0.5)))
+
 			self.blocked_edges.add((dimension-dimension*0.3+0.5-((dimension-dimension*0.3)%0.5)-(i+1)*self.myscale,dimension-dimension*0.80-((dimension-dimension*0.80)%0.5),dimension-dimension*0.3+0.5-((dimension-dimension*0.3)%0.5)-(i+1)*self.myscale,dimension-dimension*0.80+0.5-((dimension-dimension*0.80)%0.5)))
+
+			walls_loadloc.append((dimension-dimension*0.3+0.5-((dimension-dimension*0.3)%0.5)-(i+1)*self.myscale,dimension-dimension*0.80-((dimension-dimension*0.80)%0.5)))
+			walls_loadloc.append((dimension-dimension*0.3+0.5-((dimension-dimension*0.3)%0.5)-(i+1)*self.myscale,dimension-dimension*0.80+0.5-((dimension-dimension*0.80)%0.5)))
+
 			#print(dimension-dimension*0.3-((dimension-dimension*0.3)%0.5)+(i+1)*self.myscale,dimension-dimension*0.80-((dimension-dimension*0.80)%0.5),dimension-dimension*0.3-((dimension-dimension*0.3)%0.5)+(i+1)*self.myscale,dimension-dimension*0.80+0.5-((dimension-dimension*0.80)%0.5))
-			#print(dimension-dimension*0.3+0.5-((dimension-dimension*0.3)%0.5)-(i+1)*self.myscale,dimension-dimension*0.80-((dimension-dimension*0.80)%0.5),dimension-dimension*0.3+0.5-((dimension-dimension*0.3)%0.5)-(i+1)*self.myscale,dimension-dimension*0.80+0.5-((dimension-dimension*0.80)%0.5))		
+			#print(dimension-dimension*0.3+0.5-((dimension-dimension*0.3)%0.5)-(i+1)*self.myscale,dimension-dimension*0.80-((dimension-dimension*0.80)%0.5),dimension-dimension*0.3+0.5-((dimension-dimension*0.3)%0.5)-(i+1)*self.myscale,dimension-dimension*0.80+0.5-((dimension-dimension*0.80)%0.5))	
+	
 			self.blocked_edges.add((dimension-dimension*0.45+0.5-((dimension-dimension*0.45)%0.5),dimension-dimension*0.30-((dimension-dimension*0.30)%0.5)+(i+1)*self.myscale,dimension-dimension*0.45-((dimension-dimension*0.45)%0.5),dimension-dimension*0.30-((dimension-dimension*0.30)%0.5)+(i+1)*self.myscale))
+
+			walls_loadloc.append((dimension-dimension*0.45+0.5-((dimension-dimension*0.45)%0.5),dimension-dimension*0.30-((dimension-dimension*0.30)%0.5)+(i+1)*self.myscale))
+			walls_loadloc.append((dimension-dimension*0.45-((dimension-dimension*0.45)%0.5),dimension-dimension*0.30-((dimension-dimension*0.30)%0.5)+(i+1)*self.myscale))
+
 			self.blocked_edges.add((dimension-dimension*0.45+0.5-((dimension-dimension*0.45)%0.5),dimension-dimension*0.30+0.5-((dimension-dimension*0.30)%0.5)-(i+1)*self.myscale,dimension-dimension*0.45-((dimension-dimension*0.45)%0.5),dimension-dimension*0.30+0.5-((dimension-dimension*0.30)%0.5)-(i+1)*self.myscale))
+
+			walls_loadloc.append((dimension-dimension*0.45+0.5-((dimension-dimension*0.45)%0.5),dimension-dimension*0.30+0.5-((dimension-dimension*0.30)%0.5)-(i+1)*self.myscale))
+			walls_loadloc.append((dimension-dimension*0.45-((dimension-dimension*0.45)%0.5),dimension-dimension*0.30+0.5-((dimension-dimension*0.30)%0.5)-(i+1)*self.myscale))
+
 			self.blocked_edges.add((-dimension+dimension*0.6-((-dimension+dimension*0.6)%0.5)+(i+1)*self.myscale,dimension-dimension*0.30-((dimension-dimension*0.30)%0.5),-dimension+dimension*0.6-((-dimension+dimension*0.6)%0.5)+(i+1)*self.myscale,dimension-dimension*0.30+0.5-((dimension-dimension*0.30)%0.5)))
+
+			walls_loadloc.append((-dimension+dimension*0.6-((-dimension+dimension*0.6)%0.5)+(i+1)*self.myscale,dimension-dimension*0.30-((dimension-dimension*0.30)%0.5)))
+			walls_loadloc.append((-dimension+dimension*0.6-((-dimension+dimension*0.6)%0.5)+(i+1)*self.myscale,dimension-dimension*0.30+0.5-((dimension-dimension*0.30)%0.5)))
+
 			self.blocked_edges.add((-dimension+dimension*0.6+0.5-((-dimension+dimension*0.6)%0.5)-(i+1)*self.myscale,dimension-dimension*0.30-((dimension-dimension*0.30)%0.5),-dimension+dimension*0.6+0.5-((-dimension+dimension*0.6)%0.5)-(i+1)*self.myscale,dimension-dimension*0.30+0.5-((dimension-dimension*0.30)%0.5)))
+
+			walls_loadloc.append((-dimension+dimension*0.6+0.5-((-dimension+dimension*0.6)%0.5)-(i+1)*self.myscale,dimension-dimension*0.30-((dimension-dimension*0.30)%0.5)))
+			walls_loadloc.append((-dimension+dimension*0.6+0.5-((-dimension+dimension*0.6)%0.5)-(i+1)*self.myscale,dimension-dimension*0.30+0.5-((dimension-dimension*0.30)%0.5)))
+
 			self.blocked_edges.add((-dimension+dimension*0.3+0.5-((-dimension+dimension*0.3)%0.5),-dimension+dimension*0.9-((-dimension+dimension*0.9)%0.5)+(i+1)*self.myscale,-dimension+dimension*0.3-((-dimension+dimension*0.3)%0.5),-dimension+dimension*0.9-((-dimension+dimension*0.9)%0.5)+(i+1)*self.myscale))
+
+			walls_loadloc.append((-dimension+dimension*0.3+0.5-((-dimension+dimension*0.3)%0.5),-dimension+dimension*0.9-((-dimension+dimension*0.9)%0.5)+(i+1)*self.myscale))
+			walls_loadloc.append((-dimension+dimension*0.3-((-dimension+dimension*0.3)%0.5),-dimension+dimension*0.9-((-dimension+dimension*0.9)%0.5)+(i+1)*self.myscale))
+
 			self.blocked_edges.add((-dimension+dimension*0.3+0.5-((-dimension+dimension*0.3)%0.5),-dimension+dimension*0.9+0.5-((-dimension+dimension*0.9)%0.5)-(i+1)*self.myscale,-dimension+dimension*0.3-((-dimension+dimension*0.3)%0.5),-dimension+dimension*0.9+0.5-((-dimension+dimension*0.9)%0.5)-(i+1)*self.myscale))
+
+			walls_loadloc.append((-dimension+dimension*0.3+0.5-((-dimension+dimension*0.3)%0.5),-dimension+dimension*0.9+0.5-((-dimension+dimension*0.9)%0.5)-(i+1)*self.myscale))
+			walls_loadloc.append((-dimension+dimension*0.3-((-dimension+dimension*0.3)%0.5),-dimension+dimension*0.9+0.5-((-dimension+dimension*0.9)%0.5)-(i+1)*self.myscale))
+
+		#print walls_loadloc
 		count=0
 		i=0.5
 		while i<dimension:
@@ -245,7 +311,7 @@ class Maze:
 				blocked_edge=0
 				if (((x1+x)*self.myscale,(y+y1)*self.myscale,x*1.0,y*1.0) in self.blocked_edges) or ((x*1.0,y*1.0,(x1+x)*self.myscale,(y+y1)*self.myscale) in self.blocked_edges) or (((x1+x)*self.myscale,(y+y1)*self.myscale,x1*1.0,y1*1.0) in self.blocked_edges) or ((x1*1.0,y1*1.0,(x1+x)*self.myscale,(y+y1)*self.myscale) in self.blocked_edges):
 					blocked_edge=1
-				if (((x1+x)*self.myscale,(y+offset_y)*1.0,0,0,-0,0) not in self.coke_list) and (blocked_edge==0) and (x>=1.0 or x<=-1.0) and (y>=1.0 or y<=-1.0) and ((x,y) not in can_loadloc) and ((x1,y1) not in can_loadloc) and ((x*1.0,y*1.0) not in self.bin_loc) and ((x1*1.0,y1*1.0) not in self.bin_loc) and (((x1+x)*self.myscale,(y+y1)*self.myscale) not in self.bin_loc):
+				if (((x1+x)*self.myscale,(y+offset_y)*1.0,0,0,-0,0) not in self.coke_list) and (blocked_edge==0) and (x>=1.0 or x<=-1.0) and (y>=1.0 or y<=-1.0) and ((x,y) not in can_loadloc) and ((x1,y1) not in can_loadloc) and ((x*1.0,y*1.0) not in self.bin_loc) and ((x1*1.0,y1*1.0) not in self.bin_loc) and (((x1+x)*self.myscale,(y+y1)*self.myscale) not in self.bin_loc) and (((x1+x)*self.myscale,(y+offset_y)*1.0) not in walls_loadloc):
 					self.coke_list.append(((x1+x)*self.myscale,(y+offset_y)*1.0,0,0,-0,0))
 					cans["can_"+str(count)]={}
 					self.can_dict_generator(cans,count,((x1+x)*self.myscale,(y+offset_y)*1.0),(x,y),(x1,y1))
@@ -266,7 +332,7 @@ class Maze:
 				blocked_edge=0
 				if (((x1+x)*self.myscale,(y+y1)*self.myscale,x*1.0,y*1.0) in self.blocked_edges) or ((x*1.0,y*1.0,(x1+x)*self.myscale,(y+y1)*self.myscale) in self.blocked_edges) or (((x1+x)*self.myscale,(y+y1)*self.myscale,x1*1.0,y1*1.0) in self.blocked_edges) or ((x1*1.0,y1*1.0,(x1+x)*self.myscale,(y+y1)*self.myscale) in self.blocked_edges):
 					blocked_edge=1
-				if (((x+offset_x)*1.0,(y+y1)*self.myscale,0,0,-0,0) not in self.coke_list) and (blocked_edge==0) and (x>=1.0 or x<=-1.0) and (y>=1.0 or y<=-1.0) and ((x,y) not in can_loadloc) and ((x1,y1) not in can_loadloc) and ((x*1.0,y*1.0) not in self.bin_loc) and ((x1*1.0,y1*1.0) not in self.bin_loc) and (((x1+x)*self.myscale,(y+y1)*self.myscale) not in self.bin_loc):
+				if (((x+offset_x)*1.0,(y+y1)*self.myscale,0,0,-0,0) not in self.coke_list) and (blocked_edge==0) and (x>=1.0 or x<=-1.0) and (y>=1.0 or y<=-1.0) and ((x,y) not in can_loadloc) and ((x1,y1) not in can_loadloc) and ((x*1.0,y*1.0) not in self.bin_loc) and ((x1*1.0,y1*1.0) not in self.bin_loc) and (((x1+x)*self.myscale,(y+y1)*self.myscale) not in self.bin_loc) and (((x+offset_x)*1.0,(y+y1)*self.myscale) not in walls_loadloc):
 					self.coke_list.append(((x+offset_x)*1.0,(y+y1)*self.myscale,0,0,-0,0))
 					cans["can_"+str(count)]={}
 					self.can_dict_generator(cans,count,((x+offset_x)*1.0,(y+y1)*self.myscale),(x,y),(x1,y1))
@@ -300,7 +366,7 @@ class Maze:
 				blocked_edge=0
 				if (((x1+x)*self.myscale,(y+y1)*self.myscale,x*1.0,y*1.0) in self.blocked_edges) or ((x*1.0,y*1.0,(x1+x)*self.myscale,(y+y1)*self.myscale) in self.blocked_edges) or (((x1+x)*self.myscale,(y+y1)*self.myscale,x1*1.0,y1*1.0) in self.blocked_edges) or ((x1*1.0,y1*1.0,(x1+x)*self.myscale,(y+y1)*self.myscale) in self.blocked_edges):
 					blocked_edge=1
-				if (((x1+x)*self.myscale,(y+offset_y)*1.0,0,0,-0,0) not in self.coke_list) and (((x1+x)*self.myscale,(y+offset_y)*1.0,0,0,-0,0) not in self.cup_list) and (blocked_edge==0) and (x>=1.0 or x<=-1.0) and (y>=1.0 or y<=-1.0) and ((x,y) not in can_loadloc) and ((x1,y1) not in can_loadloc) and ((x,y) not in cup_loadloc) and ((x1,y1) not in cup_loadloc) and ((x*1.0,y*1.0) not in self.bin_loc) and ((x1*1.0,y1*1.0) not in self.bin_loc) and (((x1+x)*self.myscale,(y+y1)*self.myscale) not in self.bin_loc):
+				if (((x1+x)*self.myscale,(y+offset_y)*1.0,0,0,-0,0) not in self.coke_list) and (((x1+x)*self.myscale,(y+offset_y)*1.0,0,0,-0,0) not in self.cup_list) and (blocked_edge==0) and (x>=1.0 or x<=-1.0) and (y>=1.0 or y<=-1.0) and ((x,y) not in can_loadloc) and ((x1,y1) not in can_loadloc) and ((x,y) not in cup_loadloc) and ((x1,y1) not in cup_loadloc) and ((x*1.0,y*1.0) not in self.bin_loc) and ((x1*1.0,y1*1.0) not in self.bin_loc) and (((x1+x)*self.myscale,(y+y1)*self.myscale) not in self.bin_loc) and (((x1+x)*self.myscale,(y+offset_y)*1.0) not in walls_loadloc):
 					self.cup_list.append(((x1+x)*self.myscale,(y+offset_y)*1.0,0,0,-0,0))
 					cups["cup_"+str(count)]={}
 					self.cup_dict_generator(cups,count,((x1+x)*self.myscale,(y+offset_y)*1.0),(x,y),(x1,y1))
@@ -320,7 +386,7 @@ class Maze:
 				blocked_edge=0
 				if (((x1+x)*self.myscale,(y+y1)*self.myscale,x*1.0,y*1.0) in self.blocked_edges) or ((x*1.0,y*1.0,(x1+x)*self.myscale,(y+y1)*self.myscale) in self.blocked_edges) or (((x1+x)*self.myscale,(y+y1)*self.myscale,x1*1.0,y1*1.0) in self.blocked_edges) or ((x1*1.0,y1*1.0,(x1+x)*self.myscale,(y+y1)*self.myscale) in self.blocked_edges):
 					blocked_edge=1
-				if (((x+offset_x)*1.0,(y+y1)*self.myscale,0,0,-0,0) not in self.coke_list) and (((x+offset_x)*1.0,(y+y1)*self.myscale,0,0,-0,0) not in self.cup_list) and (blocked_edge==0) and (x>=1.0 or x<=-1.0) and (y>=1.0 or y<=-1.0) and ((x,y) not in can_loadloc) and ((x1,y1) not in can_loadloc) and ((x,y) not in cup_loadloc) and ((x1,y1) not in cup_loadloc) and ((x*1.0,y*1.0) not in self.bin_loc) and ((x1*1.0,y1*1.0) not in self.bin_loc) and (((x1+x)*self.myscale,(y+y1)*self.myscale) not in self.bin_loc):
+				if (((x+offset_x)*1.0,(y+y1)*self.myscale,0,0,-0,0) not in self.coke_list) and (((x+offset_x)*1.0,(y+y1)*self.myscale,0,0,-0,0) not in self.cup_list) and (blocked_edge==0) and (x>=1.0 or x<=-1.0) and (y>=1.0 or y<=-1.0) and ((x,y) not in can_loadloc) and ((x1,y1) not in can_loadloc) and ((x,y) not in cup_loadloc) and ((x1,y1) not in cup_loadloc) and ((x*1.0,y*1.0) not in self.bin_loc) and ((x1*1.0,y1*1.0) not in self.bin_loc) and (((x1+x)*self.myscale,(y+y1)*self.myscale) not in self.bin_loc) and (((x+offset_x)*1.0,(y+y1)*self.myscale) not in walls_loadloc):
 					self.cup_list.append(((x+offset_x)*1.0,(y+y1)*self.myscale,0,0,-0,0))
 					cups["cup_"+str(count)]={}
 					self.cup_dict_generator(cups,count,((x+offset_x)*1.0,(y+y1)*self.myscale),(x,y),(x1,y1))
