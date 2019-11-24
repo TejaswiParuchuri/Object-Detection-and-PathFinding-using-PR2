@@ -14,7 +14,6 @@ from collections import namedtuple
 class RobotActionsServer:
 
     def __init__(self, object_dict, root_path, random_seed=10):
-        
         self.object_dict = object_dict
         self.failure = -1
         self.success = 1
@@ -34,6 +33,8 @@ class RobotActionsServer:
         rospy.Service('get_reward', GetReward, self.get_reward)
         rospy.Service('is_terminal_state', IsTerminalState, self.is_terminal_state_handler)
         rospy.Service('get_current_state', GetInitialState, self.get_current_state)
+	#rospy.Service('get_successor_state', GetSuccessor, self.get_current_state)
+	#rospy.Service('get_turtlebot_location', GetTurtleBotState,self.get_turtlebot_location)
         print "Action Server Initiated"
 
 
@@ -53,6 +54,7 @@ class RobotActionsServer:
                         }
         state["bin"]={'x': float(self.object_dict["bins"]["bin"]["loc"][0]),
                   'y': float(self.object_dict["bins"]["bin"]["loc"][1]),}
+	print state
         return state
 
 

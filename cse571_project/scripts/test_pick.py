@@ -103,7 +103,7 @@ def point_head_at_can():
 	print("Pointing Head...")
 
 	gms_func = rospy.ServiceProxy( '/gazebo/get_model_state', GetModelState)
-	can_pose = gms_func("coke_can1","base_link").pose.position
+	can_pose = gms_func("coke_can6","pr2::base_footprint").pose.position
 
 	print("can_pose:")
 	print(can_pose)

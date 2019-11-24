@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<launch>
+
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(find cse571_project)/worlds/maze.sdf"/>
+    <arg name="paused" value="false"/>
+    <arg name="use_sim_time" value="true"/>
+    <arg name="gui" value="true"/>
+    <arg name="headless" value="false"/>
+    <arg name="debug" value="false"/>
+  </include>
+
+<include file="$(find pr2_description)/robots/upload_pr2.launch" pass_all_args="true" />
+
+  <arg name="KINECT1" default="$(optenv KINECT1 false)" />
+  <arg name="KINECT2" default="$(optenv KINECT2 false)" />
+  
+  <!-- Startup PR2 without any mechanism controllers -->
+  <include file="$(find pr2_gazebo)/launch/pr2_no_controllers.launch" pass_all_args="true"/>
+
+  <!-- Load and Start Default Controllers -->
+  <include file="$(find pr2_controller_configuration_gazebo)/launch/pr2_default_controllers.launch" />
+
+</launch>
