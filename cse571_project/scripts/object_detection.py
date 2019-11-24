@@ -23,12 +23,14 @@ import cv2
 import roslib
 import rospy
 
+# ROS Messages
 import geometry_msgs.msg
 from gazebo_msgs.srv import GetModelState
 from sensor_msgs.msg import CompressedImage, Image
 from geometry_msgs.msg import PointStamped
-from pr2_controllers_msgs.msg import PointHeadActionGoal
-from pr2_controllers_msgs.msg import PointHeadGoal
+from pr2_controllers_msgs.msg import PointHeadActionGoal, PointHeadGoal, PointHeadAction, PointHeadActionResult 
+from actionlib_msgs.msg import GoalStatusArray
+
 
 # Required to change the format of the sensor image
 from cv_bridge import CvBridge, CvBridgeError
@@ -50,18 +52,26 @@ VERBOSE = True
 ROOT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir))
 
 
-class RobotHead:
+class MoveRobotHead:
 
 	"""
 	Used to point the robot's head in the direction of the object to be picked up.
 	"""
 
 	def __init__(self):
-		pass
+
+		rospy.init_node('MoveRobotHead', anonymous = True)
+
+		self.headpub = rospy.Publisher("/head_traj_controller/point_head_action/goal", PointHeadActionGoal, queue_size = 10)
+		
+		while self.headpub.get_num_connections() == 0:
+			rospy.loginfo("Waiting for head publisher to connect")
+			rospy.sleep(1)
+
 		# Initialize the publisher to the required topic
 		
 
-	def look_at(self, frame_id, x, y, z):
+	def look_at(self, x, y, z, frame_id='base_link'):
 		
 		"""
 		This method will publish coke_location coordinates to PR2's head. This will rotate 
@@ -74,23 +84,13 @@ class RobotHead:
 
 		"""
 
-		rospy.init_node('RobotHead', anonymous = True)
-		
-		headpub = rospy.Publisher("/head_traj_controller/point_head_action/goal", PointHeadActionGoal, queue_size=10)
-
-		while headpub.get_num_connections() == 0:
-			rospy.loginfo("Waiting for head publisher to connect")
-			rospy.sleep(1)
-		
 		gms_func = rospy.ServiceProxy('/gazebo/get_model_state', GetModelState)
-		can_pose = gms_func("coke_can1","pr2::base_footprint").pose.position
-	
-		print (can_pose)
+		can_pose = gms_func("plastic_cup2", "pr2::base_footprint").pose.position
 
 		data = PointHeadActionGoal()
 		point = PointStamped()
 
-		point.header.frame_id = "base_link"
+		point.header.frame_id = frame_id
 		point.point.x = can_pose.x
 		point.point.y = can_pose.y
 		point.point.z = can_pose.z
@@ -104,18 +104,26 @@ class RobotHead:
 		data.goal.pointing_axis.z = 0
 
 		# Publish goal to PR2's head
-		headpub.publish(data)
-		
-		'''
-		data = PointHeadActionGoal()
-		data.header.frame_id = "pr2::base_link"
-		goal = PointHeadGoal()
-		goal.point.x = 1.0
-		goal.point.y = 2.0
-		goal.point.z = 3.0
-		'''
+		self.headpub.publish(data)
+	
+		print ('Moving head to coordinates: ')
+		print (can_pose)
 
-		print ('Moving head')
+
+		# The callback method for this subscriber will only be activated when the head is pointing to the goal.
+		self.headsub = rospy.Subscriber("/head_traj_controller/point_head_action/result", PointHeadActionResult, self.callback)
+
+
+	def callback(self, status):
+
+		print ('Callback action')
+
+		point = PointHeadActionResult()
+		
+		if point.status.status == 0:
+			self.headsub.unregister()
+			time.sleep(2)
+			obj = ObjectClassifier()
 
 
 
@@ -129,16 +137,14 @@ class ObjectClassifier:
 	"""
 
 	def __init__(self):
-
-		rospy.init_node('ObjectClassifier', anonymous=True)
-		
-
+	
+		#rospy.init_node('ObjectClassifier', anonymous=True)
 		self.publisher = None 
 		self.subscriber = rospy.Subscriber('/wide_stereo/right/image_raw', Image, self.callback)		
 
 		if VERBOSE:
 			print 'Subscribed to PR2 camera topic'
-		
+
 
 	def train_classifier(self):
 
@@ -180,8 +186,8 @@ class ObjectClassifier:
 		print 'Training set gathered...\n'
 
 		classifier.fit_generator(training_set,
-	                             steps_per_epoch = 64,
-	                             epochs = 5,
+	                             steps_per_epoch = 83,
+	                             epochs = 15,
 	                             validation_data = test_set)
 
 
@@ -211,7 +217,7 @@ class ObjectClassifier:
 		"""
 
 		classifier = self.load_classifier()
-
+		
 		print ('Trying to predict...\n')
 
 		# Making new predictions based off the trained CNN
@@ -235,6 +241,7 @@ class ObjectClassifier:
 		
 		try:
 			cv2_img = bridge.imgmsg_to_cv2(ros_data, "bgr8")
+			#cv2_img = cv2.resize(cv2_img, (600, 400), interpolation = cv2.INTER_AREA)
 			image_path = ROOT_PATH + '/sensor_image.png'
 			cv2.imwrite(image_path, cv2_img)
 
@@ -246,22 +253,23 @@ class ObjectClassifier:
 
 		# Trigger the pick action if a coke_can if found
 		if prediction == 0:
+			print ('Coke can')
 			# self.publisher.publish()
-			pass
 		else:
-			pass
+			print ('Plastic cup')
 
 
 
 if __name__=='__main__':
 
 	#obj = ObjectClassifier()
-
-	robot_head = RobotHead()
-	robot_head.look_at('base_link', -10.0, 10.0, 5.0)
+	
+	robot_head = MoveRobotHead()
+	robot_head.look_at(0, 0, 0)
 
 	try:
 		rospy.spin()
 
 	except KeyboardInterrupt:
 		print 'Keyboard Interrupt'
+	
