@@ -24,7 +24,7 @@ robot = moveit_commander.RobotCommander()
 scene = moveit_commander.PlanningSceneInterface()
 
 group_name = "right_arm"
-group = moveit_commander.MoveGroupCommander(group_name)
+#group = moveit_commander.MoveGroupCommander(group_name)
 
 standing_joints = [-0.00020377586883224552, \
 					0.03213652755729335, \
