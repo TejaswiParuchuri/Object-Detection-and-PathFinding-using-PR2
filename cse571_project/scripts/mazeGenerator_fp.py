@@ -50,7 +50,7 @@ class Maze:
 			#f_out.write(string_write)
 		j=i+1
 		for i in range(len(self.walls_list)):
-			f_out.write("\n<link name='Wall_{}'>\n<collision name='Wall_{}_Collision'>\n<geometry>\n<box>\n<size>{} 0.15 0.5</size>\n</box>\n</geometry>\n<pose frame=''>0 0 0.25 0 -0 0</pose>\n<max_contacts>10</max_contacts>\n<surface>\n<contact>\n<ode/>\n</contact>\n<bounce/>\n<friction>\n<torsional>\n<ode/>\n</torsional>\n<ode/>\n</friction>\n</surface>\n</collision>\n<visual name='Wall_{}_Visual'>\n<pose frame=''>0 0 0.25 0 -0 0</pose>\n<geometry>\n<box>\n<size>{} 0.15 0.5</size>\n</box>\n</geometry>\n<material>\n<script>\n<uri>file://media/materials/scripts/gazebo.material</uri>\n<name>Gazebo/Wood</name>\n</script>\n<ambient>1 1 1 1</ambient>\n</material>\n</visual>\n<pose frame=''>{} {} {} {} {} {}</pose>\n<self_collide>0</self_collide>\n<kinematic>0</kinematic>\n<gravity>1</gravity>\n</link>\n".format(i+j,i+j,length*2*0.3,i+j,length*2*0.3,self.walls_list[i][0],self.walls_list[i][1],self.walls_list[i][2],self.walls_list[i][3],self.walls_list[i][4],self.walls_list[i][5]))
+			f_out.write("\n<link name='Wall_{}'>\n<collision name='Wall_{}_Collision'>\n<geometry>\n<box>\n<size>{} 0.15 0.5</size>\n</box>\n</geometry>\n<pose frame=''>0 0 0.25 0 -0 0</pose>\n<max_contacts>10</max_contacts>\n<surface>\n<contact>\n<ode/>\n</contact>\n<bounce/>\n<friction>\n<torsional>\n<ode/>\n</torsional>\n<ode/>\n</friction>\n</surface>\n</collision>\n<visual name='Wall_{}_Visual'>\n<pose frame=''>0 0 0.25 0 -0 0</pose>\n<geometry>\n<box>\n<size>{} 0.15 0.5</size>\n</box>\n</geometry>\n<material>\n<script>\n<uri>file://media/materials/scripts/gazebo.material</uri>\n<name>Gazebo/Wood</name>\n</script>\n<ambient>1 1 1 1</ambient>\n</material>\n</visual>\n<pose frame=''>{} {} {} {} {} {}</pose>\n<self_collide>0</self_collide>\n<kinematic>0</kinematic>\n<gravity>1</gravity>\n</link>\n".format(i+j,i+j,length*2*0.28,i+j,length*2*0.28,self.walls_list[i][0],self.walls_list[i][1],self.walls_list[i][2],self.walls_list[i][3],self.walls_list[i][4],self.walls_list[i][5]))
 			#f_out.write(string_write)
 		f_out.write("<static>1</static>\n</model>\n")
 		#f_out.write(string_write)
@@ -137,9 +137,9 @@ class Maze:
 			self.blocked_edges.add((0.5+i*self.myscale,-dimension+0.5,0.5+i*self.myscale,-dimension))
 			self.blocked_edges.add((-0.5-i*self.myscale,-dimension+0.5,-0.5-i*self.myscale,-dimension))
 		self.walls_list.append((-dimension+dimension*0.3,-dimension+dimension*0.3,0,0,-0,0))
-		self.walls_list.append((-0.12992,-dimension+dimension*0.3,0,0,0,-1.5708))
+		self.walls_list.append((-0.5,-dimension+dimension*0.3,0,0,0,-1.5708))
 		self.walls_list.append((dimension-dimension*0.48,-dimension+dimension*0.6,0,0,-0,1.5708))
-		self.walls_list.append((dimension-dimension*0.90,dimension-dimension*0.85,0,0,0,-1.5708))
+		self.walls_list.append((0.6,dimension-dimension*0.85,0,0,0,-1.5708))
 		self.walls_list.append((dimension-dimension*0.3 ,dimension-dimension*0.80,0,0,-0,0))
 		self.walls_list.append((dimension-dimension*0.45,dimension-dimension*0.30,0,0,0,-1.57080))
 		self.walls_list.append((-dimension+dimension*0.6,dimension-dimension*0.30,0,0,-0,0))
@@ -212,15 +212,15 @@ class Maze:
 			walls_loadloc.append((dimension-dimension*0.48+0.5-((dimension-dimension*0.48)%0.5),-dimension+dimension*0.6+0.5-((-dimension+dimension*0.6)%0.5)-(i+1)*self.myscale))
 			walls_loadloc.append((dimension-dimension*0.48-((dimension-dimension*0.48)%0.5),-dimension+dimension*0.6+0.5-((-dimension+dimension*0.6)%0.5)-(i+1)*self.myscale))
 
-			self.blocked_edges.add((dimension-dimension*0.90+0.5-((dimension-dimension*0.90)%0.5),dimension-dimension*0.85-((dimension-dimension*0.85)%0.5)+(i+1)*self.myscale,dimension-dimension*0.90-((dimension-dimension*0.90)%0.5),dimension-dimension*0.85-((dimension-dimension*0.85)%0.5)+(i+1)*self.myscale))
+			self.blocked_edges.add((0.5,dimension-dimension*0.85-((dimension-dimension*0.85)%0.5)+(i+1)*self.myscale,1.0,dimension-dimension*0.85-((dimension-dimension*0.85)%0.5)+(i+1)*self.myscale))
 
-			walls_loadloc.append((dimension-dimension*0.90+0.5-((dimension-dimension*0.90)%0.5),dimension-dimension*0.85-((dimension-dimension*0.85)%0.5)+(i+1)*self.myscale))
-			walls_loadloc.append((dimension-dimension*0.90-((dimension-dimension*0.90)%0.5),dimension-dimension*0.85-((dimension-dimension*0.85)%0.5)+(i+1)*self.myscale))
+			walls_loadloc.append((0.5,dimension-dimension*0.85-((dimension-dimension*0.85)%0.5)+(i+1)*self.myscale))
+			walls_loadloc.append((1.0,dimension-dimension*0.85-((dimension-dimension*0.85)%0.5)+(i+1)*self.myscale))
 
-			self.blocked_edges.add((dimension-dimension*0.90+0.5-((dimension-dimension*0.90)%0.5),dimension-dimension*0.85+0.5-((dimension-dimension*0.85)%0.5)-(i+1)*self.myscale,dimension-dimension*0.90-((dimension-dimension*0.90)%0.5),dimension-dimension*0.85+0.5-((dimension-dimension*0.85)%0.5)-(i+1)*self.myscale))
+			self.blocked_edges.add((0.5,dimension-dimension*0.85+0.5-((dimension-dimension*0.85)%0.5)-(i+1)*self.myscale,1.0,dimension-dimension*0.85+0.5-((dimension-dimension*0.85)%0.5)-(i+1)*self.myscale))
 
-			walls_loadloc.append((dimension-dimension*0.90+0.5-((dimension-dimension*0.90)%0.5),dimension-dimension*0.85+0.5-((dimension-dimension*0.85)%0.5)-(i+1)*self.myscale))
-			walls_loadloc.append((dimension-dimension*0.90-((dimension-dimension*0.90)%0.5),dimension-dimension*0.85+0.5-((dimension-dimension*0.85)%0.5)-(i+1)*self.myscale))
+			walls_loadloc.append((0.5,dimension-dimension*0.85+0.5-((dimension-dimension*0.85)%0.5)-(i+1)*self.myscale))
+			walls_loadloc.append((1.0,dimension-dimension*0.85+0.5-((dimension-dimension*0.85)%0.5)-(i+1)*self.myscale))
 
 			self.blocked_edges.add((dimension-dimension*0.3-((dimension-dimension*0.3)%0.5)+(i+1)*self.myscale,dimension-dimension*0.80-((dimension-dimension*0.80)%0.5),dimension-dimension*0.3-((dimension-dimension*0.3)%0.5)+(i+1)*self.myscale,dimension-dimension*0.80+0.5-((dimension-dimension*0.80)%0.5)))
 

@@ -10,6 +10,7 @@ import random
 import os
 import json
 import time
+#from object_detection import MoveRobotHead, ObjectClassifier
 
 ROOT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir))
 
@@ -38,55 +39,62 @@ class PathGeneration:
         	        print "JSON error"
 	#print objects
 	cans_cups=objects["cans"]
-	#cans_cups.update(objects["cups"])
-	choice=random.choice(cans_cups.values())
-	print choice["load_loc"]
-	print choice
-	x=0.5
-	y=1.0
-	orientation='EAST'
-	#current_state=(-0.5,-1.0,'NORTH')
-	#print state.x
-	#print state[0]
-	#next_state,cost=api.get_successor(state[0], 'moveF')
-	#print next_state,cost
-	'''location=[]
-	for i in cans_cups.values():
-		location+=i["load_loc"]
-	print location'''
-	#init_state=(api.get_current_state()['robot']['x'], api.get_current_state()['robot']['y'], api.get_current_state()['robot']['orientation'])
+	cans_cups.update(objects["cups"])	
 	from_location=api.State(0.0,0.0,'EAST')
-	actions,dummy_from_location,result=self.get_path(from_location,choice["load_loc"],choice["loc"])
-	print actions,dummy_from_location,result
-	actions,dummy_from_location,result=self.get_path(dummy_from_location,objects["bins"]["bin"]["load_loc"],objects["bins"]["bin"]["loc"])
-	print actions,dummy_from_location,result
-	'''can_name=''
-	api.reset_world()
-	while not api.is_terminal_state(api.get_current_state()):
-			init_state=json.dumps(api.get_current_state())
-			robot_state=[api.get_current_state()["robot"]["x"],api.get_current_state()["robot"]["y"]]
-			if robot_state in location:
-				possible_actions = api.get_possible_actions(self.current_state)
-			else:
-				possible_actions=['TurnCW', 'TurnCCW','moveF']
-			#print possible_actions
-			time.sleep(1)
-			action=random.choice(possible_actions)
-			#print action
+	f=open(ROOT_PATH + '/state_action.txt', 'w+')
+	init_state=(api.get_current_state()['robot']['x'], api.get_current_state()['robot']['y'], api.get_current_state()['robot']['orientation'])
+	f.write("%s\t"%str(init_state))
+	while cans_cups:
+		choice=random.choice(cans_cups.values())
+		print choice["load_loc"]
+		key=cans_cups.keys()[cans_cups.values().index(choice)]
+		actions,dummy_from_location,result=self.get_path(from_location,choice["load_loc"],choice["loc"])
+		print actions,dummy_from_location,result
+		for action in actions:
 			action_params={}
-			if('pick' in action):
-				can_name=random.choice(cans_cups.keys())
-				action_params["can_name"]=can_name
-			if('place' in action):
-				action_params["can_name"]=can_name
-				action_params["bin_name"]="bin"
-			return_value,next_state=api.execute_action(action,action_params)
-			if action=='pick':
-				print 'pick'
-				if return_value:
-					print retrun_value,'pick successful'
-					print next_state
-			print return_value,(api.get_current_state()['robot']['x'], api.get_current_state()['robot']['y'], api.get_current_state()['robot']['orientation'])'''
+			#print "Executing actions:",action
+			success, next_state = api.execute_action(action, action_params)
+			if not success:
+				break
+			f.write("%s \n"%action)
+			init_state=(api.get_current_state()['robot']['x'], api.get_current_state()['robot']['y'], api.get_current_state()['robot']['orientation'])
+			f.write("%s \t"%str(init_state))
+		print "Successfully reached object:",key
+		del cans_cups[key]
+		# At this point the robot has reached the load location of an object, but it doesn't know if it's a coke can or a plastic cup.
+		# Hence, execute the sense action.
+		#robot_head = MoveRobotHead()
+		#sense = robot_head.look_at(x, y, z)
+		'''
+		if sense == 0:
+			# Execute pick action
+			pass
+		else:
+			# Do not pick
+			pass'''
+		if 'can' in key:
+			success,next_state=api.execute_action('pick',{"can_name":key})
+			f.write("pick_%s \t"%str(key))
+			print "I have executed pick action:",next_state
+			actions,dummy_from_location,result=self.get_path(dummy_from_location,objects["bins"]["bin"]["load_loc"],objects["bins"]["bin"]["loc"])
+			print actions,dummy_from_location,result
+			for action in actions:
+				action_params={}
+				#print "Executing actions:",action
+				success, next_state = api.execute_action(action, action_params)
+				if not success:
+					break
+				f.write("%s \n"%action)
+				init_state=(api.get_current_state()['robot']['x'], api.get_current_state()['robot']['y'], api.get_current_state()['robot']['orientation'])
+				f.write("%s \t"%str(init_state))
+			print "Successfully reached bin"
+			success,next_state=api.execute_action('place',{"can_name":key,"bin_name":"bin"})
+			print "I have executed place action:",next_state
+			f.write("place_%s \t"%str(key))
+		from_location=dummy_from_location
+	f.close()
+	print "Successfully Completed"
+	
 			
     def is_goal_state(self, current_state, goal_state):
         if(current_state.x == goal_state.x and current_state.y == goal_state.y and current_state.orientation == goal_state.orientation):
@@ -98,7 +106,7 @@ class PathGeneration:
 
     def build_goal_states(self, locations,original_location):
         states = []
-	print "Original_location:",original_location
+	#print "Original_location:",original_location
         for location in locations:
 	    if(location[0]<original_location[0] and location[1]<original_location[1]):
             	states.append(api.State(location[0], location[1], "NORTH"))
