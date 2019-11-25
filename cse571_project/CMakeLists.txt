@@ -70,6 +70,7 @@ find_package(catkin REQUIRED COMPONENTS
    GetPossibleActions.srv
    GetPossibleStates.srv
    GetReward.srv
+   GetSuccessor.srv
  )
 
 ## Generate actions in the 'action' folder
