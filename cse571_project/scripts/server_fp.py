@@ -151,7 +151,7 @@ if __name__ == "__main__":
 		print('Maximum no. of cans available are: 9 and Minimum number available are:4')
 		exit()
 	if n_cups>n_cans:
-		prints('Max no.of cups should be less than no.of cans')
+		print('Max no.of cups should be less than no.of cans')
 		exit()
 	grid_size = 8 * (round(n_cans*1.0/4))
 	print grid_size
