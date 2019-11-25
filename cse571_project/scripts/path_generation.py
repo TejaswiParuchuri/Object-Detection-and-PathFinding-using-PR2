@@ -60,38 +60,39 @@ class PathGeneration:
 			init_state=(api.get_current_state()['robot']['x'], api.get_current_state()['robot']['y'], api.get_current_state()['robot']['orientation'])
 			f.write("%s \t"%str(init_state))
 		print "Successfully reached object:",key
-		del cans_cups[key]
-		# At this point the robot has reached the load location of an object, but it doesn't know if it's a coke can or a plastic cup.
-		# Hence, execute the sense action.
-		#robot_head = MoveRobotHead()
-		#sense = robot_head.look_at(x, y, z)
-		'''
-		if sense == 0:
-			# Execute pick action
-			pass
-		else:
-			# Do not pick
-			pass'''
-		if 'can' in key:
-			success,next_state=api.execute_action('pick',{"can_name":key})
-			f.write("pick_%s \t"%str(key))
-			print "I have executed pick action:",next_state
-			actions,dummy_from_location,result=self.get_path(dummy_from_location,objects["bins"]["bin"]["load_loc"],objects["bins"]["bin"]["loc"])
-			print actions,dummy_from_location,result
-			for action in actions:
-				action_params={}
-				#print "Executing actions:",action
-				success, next_state = api.execute_action(action, action_params)
-				if not success:
-					break
-				f.write("%s \n"%action)
-				init_state=(api.get_current_state()['robot']['x'], api.get_current_state()['robot']['y'], api.get_current_state()['robot']['orientation'])
-				f.write("%s \t"%str(init_state))
-			print "Successfully reached bin"
-			success,next_state=api.execute_action('place',{"can_name":key,"bin_name":"bin"})
-			print "I have executed place action:",next_state
-			f.write("place_%s \t"%str(key))
-		from_location=dummy_from_location
+		if result:
+			del cans_cups[key]
+			# At this point the robot has reached the load location of an object, but it doesn't know if it's a coke can or a plastic cup.
+			# Hence, execute the sense action.
+			#robot_head = MoveRobotHead()
+			#sense = robot_head.look_at(x, y, z)
+			'''
+			if sense == 0:
+				# Execute pick action
+				pass
+			else:
+				# Do not pick
+				pass'''
+			if 'can' in key:
+				success,next_state=api.execute_action('pick',{"can_name":key})
+				f.write("pick_%s \t"%str(key))
+				print "I have executed pick action:",next_state
+				actions,dummy_from_location,result=self.get_path(dummy_from_location,objects["bins"]["bin"]["load_loc"],objects["bins"]["bin"]["loc"])
+				print actions,dummy_from_location,result
+				for action in actions:
+					action_params={}
+					#print "Executing actions:",action
+					success, next_state = api.execute_action(action, action_params)
+					if not success:
+						break
+					f.write("%s \n"%action)
+					init_state=(api.get_current_state()['robot']['x'], api.get_current_state()['robot']['y'], api.get_current_state()['robot']['orientation'])
+					f.write("%s \t"%str(init_state))
+				print "Successfully reached bin"
+				success,next_state=api.execute_action('place',{"can_name":key,"bin_name":"bin"})
+				print "I have executed place action:",next_state
+				f.write("place_%s \t"%str(key))
+			from_location=dummy_from_location
 	f.close()
 	print "Successfully Completed"
 	
