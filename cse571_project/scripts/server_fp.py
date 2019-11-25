@@ -17,7 +17,7 @@ mazeInfo = None
 mazeInfoCopy = None
 parser = argparse.ArgumentParser()
 parser.add_argument('-cans', help='for providing no. of subjects', metavar='5', action='store', dest='n_cans', default=8, type=int)
-parser.add_argument('-cups', help='for providing no. of books for each subject', metavar='5', action='store', dest='n_cups', default=8, type=int)
+parser.add_argument('-cups', help='for providing no. of books for each subject', metavar='5', action='store', dest='n_cups', default=4, type=int)
 parser.add_argument('-s', help='for providing random seed', metavar='32', action='store', dest='seed', default=int(time.time()), type=int)
 parser.add_argument('-action_seed', help='for providing action selection random seed', metavar='32', action='store', dest='action_seed', default=int(time.time()), type=int)
 robot_action_server = None
@@ -112,15 +112,22 @@ def handle_get_successor(req):
     return GetSuccessorResponse(x_cord, y_cord, direction, g_cost)
 
 def remove_blocked_edge(req):
-	bookname = req.bookname
-	global books
+	can_name = req.can_name
+	global cans
 	global mazeInfo
-	location_of_blocked_edge_list = books["books"][bookname]["load_loc"]
-	if location_of_blocked_edge_list[0][0] <= location_of_blocked_edge_list[1][0] and location_of_blocked_edge_list[0][1] <= location_of_blocked_edge_list[1][1]:
-		blocked_edge = (location_of_blocked_edge_list[0][0], location_of_blocked_edge_list[0][1], location_of_blocked_edge_list[1][0], location_of_blocked_edge_list[1][1])
-	else:
-		blocked_edge = (location_of_blocked_edge_list[1][0], location_of_blocked_edge_list[1][1], location_of_blocked_edge_list[0][0], location_of_blocked_edge_list[0][1])
-	mazeInfo.blocked_edges.remove(blocked_edge)
+	location_of_blocked_edge_list = cans["cans"][can_name]["load_loc"]
+	x=location_of_blocked_edge_list[0][0]
+	y=location_of_blocked_edge_list[0][1]
+	x1=location_of_blocked_edge_list[1][0]
+	y1=location_of_blocked_edge_list[1][1]
+	if ((x*1.0,y*1.0,(x+x1)*0.5,(y+y1)*0.5) in mazeInfo.blocked_edges):
+		mazeInfo.blocked_edges.remove((x*1.0,y*1.0,(x+x1)*0.5,(y+y1)*0.5))
+	if (((x+x1)*0.5,(y+y1)*0.5,x*1.0,y*1.0) in mazeInfo.blocked_edges):
+		mazeInfo.blocked_edges.remove(((x+x1)*0.5,(y+y1)*0.5,x*1.0,y*1.0))
+	if ((x1*1.0,y1*1.0,(x+x1)*0.5,(y+y1)*0.5) in mazeInfo.blocked_edges):
+		mazeInfo.blocked_edges.remove((x1*1.0,y1*1.0,(x+x1)*0.5,(y+y1)*0.5))
+	if (((x+x1)*0.5,(y+y1)*0.5,x1*1.0,y1*1.0) in mazeInfo.blocked_edges):
+		mazeInfo.blocked_edges.remove(((x+x1)*0.5,(y+y1)*0.5,x1*1.0,y1*1.0))
 	return "1"
 
 
@@ -140,13 +147,14 @@ if __name__ == "__main__":
 	seed = args.seed
 	print "n_cans: ", n_cans
 	print "n_caps:", n_cups
-	if n_cans > 20 or n_cans <4:
-		print('Maximum no. of cans available are: 20 and Minimum number available are:4')
+	if n_cans > 9 or n_cans <4:
+		print('Maximum no. of cans available are: 9 and Minimum number available are:4')
 		exit()
 	if n_cups>n_cans:
-		prints('Max no.of cups should be less than no.of cans')
+		print('Max no.of cups should be less than no.of cans')
 		exit()
-	grid_size = 8 * (n_cans//4)
+	grid_size = 8 * (round(n_cans*1.0/4))
+	print grid_size
 	mazeInfo = Maze(grid_size, 0.5)
 	cans = mazeInfo.generate_blocked_edges(n_cans,n_cups, seed, root_path)
 	mazeInfoCopy = copy.deepcopy(mazeInfo)

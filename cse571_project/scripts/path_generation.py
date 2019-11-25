@@ -43,7 +43,7 @@ class PathGeneration:
 		#print objects
 		cans_cups=objects["cans"]
 		cans_cups.update(objects["cups"])	
-		from_location=api.State(0.0,0.0,'EAST')
+		from_location=State(0.0,0.0,'EAST')
 		f=open(ROOT_PATH + '/state_action.txt', 'w+')
 		init_state=(api.get_current_state()['robot']['x'], api.get_current_state()['robot']['y'], api.get_current_state()['robot']['orientation'])
 		f.write("%s\t"%str(init_state))
@@ -106,21 +106,24 @@ class PathGeneration:
 		#print "Original_location:",original_location
 		for location in locations:
 			if(location[0]<original_location[0] and location[1]<original_location[1]):
-				states.append(api.State(location[0], location[1], "NORTH"))
+				states.append(State(location[0], location[1], "NORTH"))
 				# states.append(api.State(location[0], location[1], "EAST"))
 			elif(location[0]>original_location[0] and location[1]<original_location[1]):
 				# states.append(api.State(location[0], location[1], "NORTH"))
-				states.append(api.State(location[0], location[1], "WEST"))
+				states.append(State(location[0], location[1], "WEST"))
 			elif(location[0]<original_location[0] and location[1]>original_location[1]):
 				# states.append(api.State(location[0], location[1], "SOUTH"))
-				states.append(api.State(location[0], location[1], "EAST"))
+				states.append(State(location[0], location[1], "EAST"))
 			else:
-				states.append(api.State(location[0], location[1], "SOUTH"))
+				states.append(State(location[0], location[1], "SOUTH"))
 				# states.append(api.State(location[0], location[1], "WEST"))
 		return states    
 
 
 	def get_path(self, init_state, goal_locations,original_location):
+		'''
+		Reference: This code is taken from Homework#2 fo CSE571 course to generate path using A* 
+		'''
 		final_state = None
 		goal_states = self.build_goal_states(goal_locations,original_location)
 		goal_reached = False
@@ -139,7 +142,7 @@ class PathGeneration:
 				current_cost = top_item[0]
 				current_state = top_item[2][0]
 				current_actions = top_item[2][1]
-		#print current_state        
+				#print current_state        
 				if(current_state in visited):
 					continue
 				
@@ -149,9 +152,11 @@ class PathGeneration:
 
 				visited.append(current_state)
 				for action in possible_actions:
-			#print action
+					#print action
 					nextstate, cost = api.get_successor(current_state, action)
-			#print nextstate,cost
+		    			#print nextstate,cost
+		    			nextstate=State(nextstate[0],nextstate[1],nextstate[2])
+					#print nextstate,cost
 					cost = self.get_manhattan_distance(nextstate, goal_state) # manhattan distance heuristc
 					key = (nextstate.x, nextstate.y, nextstate.orientation)
 					if(nextstate.x == -1 and nextstate.y == -1):
@@ -170,5 +175,36 @@ class PathGeneration:
 
 		return action_list, final_state, goal_reached
 
+class State:
+    """
+    This class defines the state of the PR2.
+    Reference: This is taken from Homework#2 of cse571 course to implement path generation using A*
+
+    """
+
+    def __init__(self,x,y,orientation):
+        """
+        :param x: current x-cordinate of turtlebot
+        :type x: float
+        :param y: current x-cordinate of turtlebot
+        :type y: float   
+        :param orientation: current orientation of turtlebot, can be either NORTH, SOUTH, EAST, WEST
+        :type orientation: float
+
+        """  
+        self.x  = x 
+        self.y = y
+        self.orientation = orientation
+
+    def __eq__(self,other):
+        if self.x == other.x and self.y == other.y and self.orientation == other.orientation:
+            return True
+        else:
+            return False
+
+    def __repr__(self):
+        return "({}, {}, {})".format(str(self.x), str(self.y), str(self.orientation))
+
+
 if __name__ == "__main__":
-	path_generator = PathGeneration()
+    path_generator = PathGeneration()

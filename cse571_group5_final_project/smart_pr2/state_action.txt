@@ -1,0 +1,26 @@
+(0.0, 0.0, u'EAST')	TurnCCW 
+(0.0, 0.0, u'NORTH') 	moveF 
+(0.0, 0.5, u'NORTH') 	moveF 
+(0.0, 1.0, u'NORTH') 	moveF 
+(0.0, 1.5, u'NORTH') 	moveF 
+(0.0, 2.0, u'NORTH') 	TurnCCW 
+(0.0, 2.0, u'WEST') 	moveF 
+(-0.5, 2.0, u'WEST') 	moveF 
+(-1.0, 2.0, u'WEST') 	moveF 
+(-1.5, 2.0, u'WEST') 	moveF 
+(-2.0, 2.0, u'WEST') 	moveF 
+(-2.5, 2.0, u'WEST') 	moveF 
+(-3.0, 2.0, u'WEST') 	TurnCW 
+(-3.0, 2.0, u'NORTH') 	TurnCW 
+(-3.0, 2.0, u'EAST') 	pick_can_3 	moveF 
+(-2.5, 2.0, u'EAST') 	moveF 
+(-2.0, 2.0, u'EAST') 	moveF 
+(-1.5, 2.0, u'EAST') 	moveF 
+(-1.0, 2.0, u'EAST') 	moveF 
+(-0.5, 2.0, u'EAST') 	moveF 
+(0.0, 2.0, u'EAST') 	TurnCW 
+(0.0, 2.0, u'SOUTH') 	moveF 
+(0.0, 1.5, u'SOUTH') 	moveF 
+(0.0, 1.0, u'SOUTH') 	moveF 
+(0.0, 0.5, u'SOUTH') 	moveF 
+(0.0, 0.0, u'SOUTH') 	

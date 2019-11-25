@@ -110,40 +110,15 @@ def execute_action(action, action_params):
     except rospy.ServiceException, e:
         print "Service call failed: %s"%e
 def get_successor(state, action):
+	'''
+	Reference: This code is taken from Homework#2 of CSE571 course to implement path generation using A*
+	'''
         rospy.wait_for_service('get_successor')
         try:
             get_successor = rospy.ServiceProxy('get_successor', GetSuccessor)
             response = get_successor(state.x,state.y,state.orientation, action)
-            return State(response.x, response.y, response.direction), response.g_cost
+            return (response.x, response.y, response.direction), response.g_cost
         except rospy.ServiceException, e:
             print "Service call failed: %s"%e
 
-class State:
-    """
-    This class defines the state of the TurtleBot.
-
-    """
-
-    def __init__(self,x,y,orientation):
-        """
-        :param x: current x-cordinate of turtlebot
-        :type x: float
-        :param y: current x-cordinate of turtlebot
-        :type y: float   
-        :param orientation: current orientation of turtlebot, can be either NORTH, SOUTH, EAST, WEST
-        :type orientation: float
-
-        """  
-        self.x  = x 
-        self.y = y
-        self.orientation = orientation
-
-    def __eq__(self,other):
-        if self.x == other.x and self.y == other.y and self.orientation == other.orientation:
-            return True
-        else:
-            return False
-
-    def __repr__(self):
-        return "({}, {}, {})".format(str(self.x), str(self.y), str(self.orientation))
 
