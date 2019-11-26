@@ -10,6 +10,9 @@ Requirements:
 	pr2_moveit:
 		https://github.com/ros-planning/moveit_pr2.git (included in our project files. Install seperately shouldn't be needed)
 
+Download the Image Classifier model from this link:
+	https://drive.google.com/file/d/1hyw8KuHT0pMXhbYn0Ch7UMeGbptjrNK2/view?usp=sharing
+	
 Known Issues:
 	-> Running the Gazebo simulation on a virtual machine can cause a depth-ordering crash. This is well
 	documented: http://answers.gazebosim.org/question/16045/camera-issue-when-using-virtual-machine/
