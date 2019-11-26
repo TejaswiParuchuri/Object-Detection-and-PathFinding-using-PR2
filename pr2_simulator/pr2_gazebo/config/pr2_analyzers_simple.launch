@@ -1,3 +1,0 @@
-<launch>
-  <rosparam command="load" file="$(find pr2_gazebo)/config/pr2_analyzers_simple.yaml" />
-</launch>
