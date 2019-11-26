@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import sys
 import rospy
-from cse571_project.srv import *
+from cse571_group5.srv import *
 from std_msgs.msg import String
 import json
 

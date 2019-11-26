@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from cse571_project.srv import *
+from cse571_group5.srv import *
 import rospy
 from mazeGenerator_fp import *
 import sys
