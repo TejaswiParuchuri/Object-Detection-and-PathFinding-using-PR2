@@ -1,4 +1,7 @@
 Requirements:
+	
+	Python libraries:
+		pip install -r requirements.txt
 	Moveit:
 		sudo apt-get install ros-kinetic-moveit
 	pr2_simulator:
