@@ -1,6 +1,6 @@
 # CSE-571-Artificial-Intelligence-Project
 
-#### Install the required libraries
+#### Install the required python libraries
 	pip install -r requirements.txt
 	
 #### Installing MoveIt (a library which helps to control the movement of the end effectors of PR2's arms in simulation)
