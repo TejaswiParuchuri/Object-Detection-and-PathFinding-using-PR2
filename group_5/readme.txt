@@ -18,7 +18,9 @@ Known Issues:
 	documented: http://answers.gazebosim.org/question/16045/camera-issue-when-using-virtual-machine/
 		-> Recommended: Run the non-simulation experiments on VM, and use a non-VM machine for physical simulations
 		
-	-> Running the 'sense_demo.py' for the second time, will use the image from the previous robot state. Hence, it will try to predict based off the sensed image at the previous state. There is a problem with the way callback methods work. It is somehow not able to update the data (Image) on every subsequent runs. Hence, it chooses the image from previous timesteps.
+	-> Running the 'sense_demo.py' for the second time, will use the image from the previous robot state. Hence, it will try to
+	predict based off the sensed image at the previous state. There is a problem with the way callback methods work. It is somehow 
+	not able to update the data (Image) on every subsequent runs. Hence, it chooses the image from previous timesteps.
 
 Team Members and Contributions:
 	All team members contributed equal effort towards completing this project.
