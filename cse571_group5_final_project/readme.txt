@@ -8,7 +8,7 @@ Requirements:
 		rosmake rosdep
 		rosdep install pr2_gazebo
 	pr2_moveit:
-		https://github.com/ros-planning/moveit_pr2.git (included in our project files. Install seperately shouldn't be needed)
+		https://github.com/ros-planning/moveit_pr2.git (included in our project files. A separate install shouldn't be needed.)
 
 Download the Image Classifier model from this link and place it in the smart_pr2/ directory:
 	https://drive.google.com/file/d/1hyw8KuHT0pMXhbYn0Ch7UMeGbptjrNK2/view?usp=sharing
