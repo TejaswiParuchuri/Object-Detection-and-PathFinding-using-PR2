@@ -76,7 +76,7 @@ Experiment 2:
 	source ~/catkin_ws/devel/setup.bash
 	catkin_make
 	rosrun cse571_group5 server_fp.py -cans 4 -cups 4 -sim False
-	roslaunch cse571_group5 maze1.launch
+	roslaunch cse571_group5 maze_1.launch
 	roslaunch pr2_moveit_config move_group.launch
 	rosrun cse571_group5 pick_demo.py
 
@@ -94,7 +94,7 @@ Experiment 3:
 	source ~/catkin_ws/devel/setup.bash
 	catkin_make
 	rosrun cse571_group5 server_fp.py -cans 4 -cups 4 -sim False
-	roslaunch cse571_group5 maze1.launch
+	roslaunch cse571_group5 maze_1.launch
 	roslaunch pr2_moveit_config move_group.launch
 	rosrun cse571_group5 sense_demo.py
 
@@ -111,7 +111,7 @@ Experiment 4:
 	source ~/catkin_ws/devel/setup.bash
 	catkin_make
 	rosrun cse571_group5 server_fp.py -cans 4 -cups 4 -sim False
-	roslaunch cse571_group5 maze1.launch
+	roslaunch cse571_group5 maze_1.launch
 	roslaunch pr2_moveit_config move_group.launch
 	rosrun cse571_group5 move_pr2.py
 	rosrun cse571_group5 path_generation.py
