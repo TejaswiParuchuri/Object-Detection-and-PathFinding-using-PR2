@@ -5,8 +5,11 @@ Requirements:
 	Moveit:
 		sudo apt-get install ros-kinetic-moveit
 	pr2_simulator:
+		cd ~/catkin_ws/src
+		git clone https://github.com/PR2/pr2_simulator.git
 		rosmake rosdep
 		rosdep install pr2_gazebo
+		rosmake pr2_gazebo
 	pr2_moveit:
 		https://github.com/ros-planning/moveit_pr2.git (included in our project files. A separate install shouldn't be needed.)
 
