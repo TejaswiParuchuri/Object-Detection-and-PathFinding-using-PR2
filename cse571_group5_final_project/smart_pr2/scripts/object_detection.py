@@ -59,18 +59,16 @@ class MoveRobotHead:
 	"""
 
 	def __init__(self):
-
-		print("starting")
-
-		# rospy.init_node('MoveRobotHead', anonymous = True)
-
-		# self.headpub = rospy.Publisher("/head_traj_controller/point_head_action/goal", PointHeadActionGoal, queue_size = 10)
 		
-		# while self.headpub.get_num_connections() == 0:
-		# 	rospy.loginfo("Waiting for head publisher to connect")
-		# 	rospy.sleep(1)
+		
+	        rospy.init_node('MoveRobotHead', anonymous = True)
 
-		# Initialize the publisher to the required topic
+		self.headpub = rospy.Publisher("/head_traj_controller/point_head_action/goal", PointHeadActionGoal, queue_size = 10)
+		
+		while self.headpub.get_num_connections() == 0:
+		 	rospy.loginfo("Waiting for head publisher to connect")
+		 	rospy.sleep(1)
+
 		
 
 	def look_at(self, x, y, z, frame_id='base_link'):
@@ -86,16 +84,15 @@ class MoveRobotHead:
 
 		"""
 
-		gms_func = rospy.ServiceProxy('/gazebo/get_model_state', GetModelState)
-		can_pose = gms_func("coke_can5", "pr2::base_footprint").pose.position
+		print("Starting head rotation")
 
 		data = PointHeadActionGoal()
 		point = PointStamped()
 
 		point.header.frame_id = frame_id
-		point.point.x = can_pose.x
-		point.point.y = can_pose.y
-		point.point.z = can_pose.z
+		point.point.x = x
+		point.point.y = y
+		point.point.z = z
 
 		data.goal = PointHeadGoal()
 		data.goal.target = point
@@ -108,8 +105,6 @@ class MoveRobotHead:
 		# Publish goal to PR2's head
 		self.headpub.publish(data)
 	
-		print ('Moving head to coordinates: ')
-		print (can_pose)
 
 		# The callback method for this subscriber will only be activated when the head is pointing to the goal.
 		self.headsub = rospy.Subscriber("/head_traj_controller/point_head_action/result", PointHeadActionResult, self.callback)
@@ -125,9 +120,9 @@ class MoveRobotHead:
 		
 		if point.status.status == 0:
 			self.headsub.unregister()
-			time.sleep(2)
-			return 
-
+			rospy.sleep(2)
+			obj = ObjectClassifier()
+			obj.sense() 
 
 
 class ObjectClassifier:
@@ -141,66 +136,12 @@ class ObjectClassifier:
 
 	def __init__(self):
 		
-		# rospy.init_node('ObjectClassifier', anonymous=True) 
-		# self.prediction = 2
-		print("starting")	
-
-	def train_classifier(self):
-
-		"""
-
-		Train a Convolutional Neural Network to classify the type of object present
-		in the image received from camera sensor. This classifier is able to classify 
-		between a coke can and a plastic cup.
-
-		"""
-
-		classifier = Sequential()
-
-		classifier.add(Conv2D(32, (3,3), input_shape = (64, 64, 3), activation='relu'))
-		classifier.add(MaxPooling2D(pool_size=(2, 2)))
-		classifier.add(Flatten())
-		classifier.add(Dense(units=128, activation = 'relu'))
-		classifier.add(Dense(units=1, activation = 'sigmoid'))
-		
-		classifier.compile(optimizer = 'adam', loss = 'binary_crossentropy', metrics = ['accuracy'])
-
-		train_datagen = ImageDataGenerator(rescale = 1./255,
-	                                       shear_range = 0.2,
-	                                       zoom_range = 0.5,
-	                                       horizontal_flip = True)
-
-		test_datagen = ImageDataGenerator(rescale = 1./255,
-										  shear_range = 0.2,
-										  zoom_range = 0.5,
-										  horizontal_flip = True)
-
-		training_set = train_datagen.flow_from_directory(ROOT_PATH + '/pr2_image_data/training_set',
-	                                target_size = (64, 64),
-	                                batch_size = 16,
-	                                class_mode = 'binary')
-		
-		test_set = test_datagen.flow_from_directory(ROOT_PATH + '/pr2_image_data/test_set',
-	                                target_size = (64, 64),
-	                                batch_size = 2,
-	                                class_mode = 'binary')
-
-
-		print 'Training set gathered...\n'
-
-		classifier.fit_generator(training_set,
-	                             steps_per_epoch = 193,
-	                             epochs = 20,
-	                             validation_data = test_set)
-
-
-		with open(ROOT_PATH + '/ObjectClassifier.pkl', 'wb') as file:
-			pickle.dump(classifier, file, protocol=2)
-			print ('Saved object classifier.')
-	    
+		print("Starting the camera sensor")	
 
 
 	def load_classifier(self):
+
+		print (ROOT_PATH)
 
 		with open(ROOT_PATH + '/ObjectClassifier.pkl', 'rb') as file:
 			classifier = pickle.load(file)
@@ -217,10 +158,10 @@ class ObjectClassifier:
 		:return: 0 if coke_can, 1 otherwise
 		'''	
 
-		self.subscriber = rospy.Subscriber('/wide_stereo/right/image_raw', Image, self.callback)		
+		self.subscriber = rospy.Subscriber('/wide_stereo/right/image_raw', Image, self.callback, queue_size=1)		
 
 		if VERBOSE:
-			print 'Subscribed to PR2 camera topic'
+			print 'Subscribed to PR2\'s head camera.'
 			
 
 		
@@ -241,7 +182,7 @@ class ObjectClassifier:
 		# Making new predictions based off the trained CNN
 		camera_image = image.load_img(sensor_image, target_size=(64, 64))
 		camera_image = image.img_to_array(camera_image)
-		camera_image = np.expand_dims(camera_image, axis=-0)
+		camera_image = np.expand_dims(camera_image, axis=0)
 		prediction = classifier.predict(camera_image)
 
 		return prediction[0][0]
@@ -254,25 +195,26 @@ class ObjectClassifier:
 		Callback function for the subscribed topic. This function predicts the type of 
 		object found in the image and then publishes it to the arm_joint topic.
 		'''
-
+	
 		bridge = CvBridge()
 		
 		try:
+			print ('Trying to fetch image from the sensor.')
 			cv2_img = bridge.imgmsg_to_cv2(ros_data, "bgr8")
-			#cv2_img = cv2.resize(cv2_img, (600, 400), interpolation = cv2.INTER_AREA)
 			image_path = ROOT_PATH + '/sensor_image.png'
+			rospy.sleep(3)
 			cv2.imwrite(image_path, cv2_img)
 
 		except CvBridgeError as e:
 			print (e)
 
 		self.prediction = self.predict_class(image_path)
+		
+		if self.prediction == 0:
+			print ('Saw a coke can')
+		else:
+			print ('Saw a plastic cup')
+
 		self.subscriber.unregister()
 
-
-
-if __name__=='__main__':
-
-	obj = ObjectClassifier()
-	obj.train_classifier()
 	
